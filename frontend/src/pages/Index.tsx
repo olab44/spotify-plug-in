@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Music, Headphones, Languages } from 'lucide-react';
+import LoginButton from '@/components/LoginButton';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
@@ -33,13 +34,7 @@ const Index: React.FC = () => {
             Dive deep into your listening habits, discover new music, and learn languages through songs. All in one beautiful experience.
           </p>
           
-          <Button
-            size="lg"
-            className="bg-spotify-green hover:bg-spotify-green/90 text-white rounded-full px-8"
-            onClick={() => navigate('/dashboard')}
-          >
-            Connect with Spotify
-          </Button>
+          <LoginButton />
         </motion.div>
 
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
