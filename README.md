@@ -1,4 +1,4 @@
-🎵 Spotify Analytics
+## 🎵 Spotify Analytics
 
 Welcome to Spotify Analytics—your ultimate tool to dive into your music journey! This app gives you personalized insights into your listening habits, helps you discover new favorites, and even learn new languages through music.
 
