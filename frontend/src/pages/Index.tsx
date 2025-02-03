@@ -1,73 +1,73 @@
-import { Layout } from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { Music, Headphones, Languages } from 'lucide-react';
 
-const Index = () => {
+const Index: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
-    <Layout>
-      <section className="min-h-[calc(100vh-8rem)] flex flex-col items-center justify-center text-center gap-8 animate-fade-up">
-        <span className="px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium tracking-wide">
-          Your Personal Music Journey
-        </span>
-        <h1 className="text-5xl sm:text-6xl font-semibold tracking-tight max-w-2xl leading-tight">
-          Discover Your Music Story Through Data
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-xl">
-          Connect with Spotify to unlock insights about your listening habits, discover new music, and visualize your musical journey.
-        </p>
-        <Button 
-          size="lg"
-          className="mt-4 text-lg font-medium tracking-wide"
-          onClick={() => {
-            // TODO: Implement Spotify login
-            console.log("Login with Spotify");
-          }}
+    <div className="min-h-screen w-full bg-background relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full spotlight" />
+      
+      <div className="container mx-auto px-4 py-20 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto"
         >
-          Connect with Spotify
-        </Button>
-      </section>
-
-      <section className="py-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {features.map((feature, index) => (
-          <div
-            key={feature.title}
-            className="p-6 rounded-xl border bg-card animate-fade-up"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-            <p className="text-muted-foreground">{feature.description}</p>
+          <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-spotify-green/20 bg-spotify-green/10">
+            <span className="text-sm font-medium text-spotify-green">
+              Your Music Journey Starts Here
+            </span>
           </div>
-        ))}
-      </section>
-    </Layout>
+          
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
+            Discover Your
+            <span className="text-gradient"> Musical Universe</span>
+          </h1>
+          
+          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+            Dive deep into your listening habits, discover new music, and learn languages through songs. All in one beautiful experience.
+          </p>
+          
+          <Button
+            size="lg"
+            className="bg-spotify-green hover:bg-spotify-green/90 text-white rounded-full px-8"
+            onClick={() => navigate('/dashboard')}
+          >
+            Connect with Spotify
+          </Button>
+        </motion.div>
+
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="flex flex-col items-center">
+            <Music className="w-12 h-12 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Smart Analytics</h3>
+            <p className="text-muted-foreground text-center">
+              Get detailed insights about your music taste and listening habits.
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <Headphones className="w-12 h-12 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Discover New Music</h3>
+            <p className="text-muted-foreground text-center">
+              Explore new songs and artists based on your preferences.
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <Languages className="w-12 h-12 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Learn Languages</h3>
+            <p className="text-muted-foreground text-center">
+              Improve your language skills through music and lyrics.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
-
-const features = [
-  {
-    title: "Listening Analytics",
-    description: "Dive deep into your music preferences with detailed statistics and trends over time.",
-  },
-  {
-    title: "Smart Playlists",
-    description: "Automatically curated playlists based on your listening habits and preferences.",
-  },
-  {
-    title: "Genre Evolution",
-    description: "Track how your music taste evolves over time with beautiful visualizations.",
-  },
-  {
-    title: "Language Learning",
-    description: "Discover music in new languages and expand your linguistic horizons.",
-  },
-  {
-    title: "Artist Insights",
-    description: "See your top artists and how they've influenced your musical journey.",
-  },
-  {
-    title: "Monthly Discoveries",
-    description: "Keep track of new artists and songs you've discovered each month.",
-  },
-];
 
 export default Index;

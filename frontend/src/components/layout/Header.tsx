@@ -20,8 +20,7 @@ export const Header = () => {
             variant="outline"
             className="font-medium tracking-wide"
             onClick={() => {
-              // TODO: Implement Spotify login
-              console.log("Login with Spotify");
+              navigate("/dashboard");
             }}
           >
             Login with Spotify
