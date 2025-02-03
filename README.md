@@ -1,69 +1,52 @@
-# Welcome to your Lovable project
+🎵 Spotify Analytics
 
-## Project info
+Welcome to Spotify Analytics—your ultimate tool to dive into your music journey! This app gives you personalized insights into your listening habits, helps you discover new favorites, and even learn new languages through music.
 
-**URL**: https://lovable.dev/projects/818885ad-0318-4420-83b3-931c20c1da52
+🌟 Features
 
-## How can I edit this code?
+🔐 Login with Spotify
+Securely connect your Spotify account to get started.
 
-There are several ways of editing your application.
+📊 Music Insights
+See your listening stats by year or month.
+Track your favorite genres and artists over time.
+Discover your monthly highlights and hidden gems.
+🎧 Playlists
+Discovery Mix: Fresh songs every 12 hours, auto-updated for you.
+Top 100 Songs: A playlist of your all-time most-played tracks.
+🌍 Learn Languages with Music
+Choose a language you want to explore.
+Get personalized music and podcast suggestions in that language.
+Enjoy lyrics with translations, powered by lyricstranslate.com.
+🛠️ Built With
 
-**Use Lovable**
+React: For the user-friendly interface.
+FastAPI: The fast and reliable backend.
+PostgreSQL: Your music data, stored securely.
+Docker: Easy deployment, everywhere.
+🚀 How to Use
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/818885ad-0318-4420-83b3-931c20c1da52) and start prompting.
+1️⃣ Get Started
+Clone this repository.
+Set up your environment with Spotify API keys (see below).
+2️⃣ Run the App
 
-Changes made via Lovable will be committed automatically to this repo.
+Frontend:
+cd frontend  
+npm install  
+npm run dev 
 
-**Use your preferred IDE**
+Backend:
+cd backend  
+python -m venv venv  
+source venv/bin/activate
+pip install -r requirements.txt  
+uvicorn main:app --reload  
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3️⃣ Add .env Files
+Create .env files with your Spotify Client ID
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Follow these steps:
+📝 License
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/818885ad-0318-4420-83b3-931c20c1da52) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+This project is under the MIT License.
