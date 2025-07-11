@@ -5,7 +5,6 @@ const LanguageRecommendation: React.FC = () => {
     <div>
       <h1 className="text-3xl font-bold mb-6">Language Recommendation</h1>
       <p>Here you can find recommendations based on the languages of the songs you listen to.</p>
-      {/* Add more content here */}
     </div>
   );
 };

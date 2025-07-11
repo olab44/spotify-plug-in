@@ -10,8 +10,6 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     let accessToken = localStorage.getItem("access_token");
-
-    // If no token in localStorage, try to get it from the URL
     if (!accessToken) {
       const params = new URLSearchParams(window.location.search);
       const tokenFromUrl = params.get("access_token");
@@ -23,7 +21,6 @@ const Dashboard: React.FC = () => {
         if (expiresInFromUrl) {
           localStorage.setItem("expires_in", expiresInFromUrl);
         }
-        // Clean the URL to remove the token after storing it
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
@@ -36,7 +33,6 @@ const Dashboard: React.FC = () => {
 
     const fetchUserInfo = async () => {
       try {
-        // Use the token from localStorage (or from URL if it was just stored)
         const response = await axios.get("http://localhost:8000/spotify/me", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });

@@ -18,7 +18,7 @@ def fetch_listening_stats(access_token: str):
 
     for item in data.get("items", []):
         played_at = item["played_at"]
-        track_duration = item["track"]["duration_ms"] / 60000  # Convert ms to minutes
+        track_duration = item["track"]["duration_ms"] / 60000
         date_obj = datetime.strptime(played_at, "%Y-%m-%dT%H:%M:%S.%fZ")
         key = f"{date_obj.year}-{date_obj.month:02d}"
 
@@ -73,15 +73,14 @@ def fetch_rankings(access_token: str):
 
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises an error for non-200 responses
+        response.raise_for_status()
 
         data = response.json()
 
-        # 🔹 Detect insufficient scope error
         if "error" in data and data["error"].get("status") == 403:
             return {"error": "Insufficient client scope. Ensure you authorized with `user-top-read`."}
 
-        return data  # ✅ Return valid Spotify API response
+        return data
 
     except requests.exceptions.RequestException:
         return {"error": "Failed to fetch rankings"}
