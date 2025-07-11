@@ -1,15 +1,20 @@
-import React from 'react';
+import React from "react";
 
-const LoginButton: React.FC = () => {
+const Index: React.FC = () => {
   const handleLogin = () => {
-    window.location.href = 'http://localhost:8000/spotify/login';
+    window.location.href = "http://localhost:8000/spotify/login";
   };
 
   return (
-    <button onClick={handleLogin} className="bg-spotify-green hover:bg-spotify-green/90 text-white rounded-full px-8 py-2">
-      Login with Spotify
-    </button>
+    <div className="text-center mt-10">
+      <button
+        onClick={handleLogin}
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
+      >
+        🎵 Login with Spotify
+      </button>
+    </div>
   );
 };
 
-export default LoginButton;
+export default Index;

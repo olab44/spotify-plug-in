@@ -16,15 +16,6 @@ export const Header = () => {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline"
-            className="font-medium tracking-wide"
-            onClick={() => {
-              navigate("/dashboard");
-            }}
-          >
-            Login with Spotify
-          </Button>
         </div>
       </div>
     </header>

@@ -14,3 +14,7 @@ class SpotifyUser(BaseModel):
     email: str
     id: str
     images: list
+
+
+class LogoutRequest(BaseModel):
+    access_token: str

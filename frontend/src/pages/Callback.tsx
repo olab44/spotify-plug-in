@@ -1,31 +1,29 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+// Callback.tsx
+import axios from "axios"; // Not strictly needed here anymore, but okay if left
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Callback: React.FC = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUserInfo = async () => {
+    const navigate = useNavigate();
+  
+    useEffect(() => {
       const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
+      const accessToken = params.get("access_token");
+      const expiresIn = params.get("expires_in"); // Retrieve expires_in from URL
 
-      if (code) {
-        try {
-          const response = await axios.get(`http://localhost:8000/spotify/callback?code=${code}`);
-          const userInfo = response.data;
-          console.log(userInfo);  // Handle user info (e.g., save to state, local storage, etc.)
-          navigate('/dashboard');  // Redirect to dashboard after successful login
-        } catch (error) {
-          console.error('Failed to fetch user info:', error);
-        }
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        // It's good practice to store the expiration time if you plan to implement token refresh
+        localStorage.setItem("expires_in", expiresIn || "3600"); // Default to 1 hour if not provided
+        navigate("/dashboard");
+      } else {
+        console.error("Access token missing from URL parameters.");
+        // Redirect to the homepage/login if token is not found
+        navigate("/"); 
       }
-    };
-
-    fetchUserInfo();
-  }, [navigate]);
-
-  return <div>Loading...</div>;
-};
+    }, [navigate]);
+  
+    return <div>Loading...</div>;
+  };
 
 export default Callback;
