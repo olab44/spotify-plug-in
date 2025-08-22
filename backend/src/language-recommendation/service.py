@@ -5,6 +5,7 @@ from .schemas import LanguageRecommendationRequest, LanguageRecommendationRespon
 
 
 def analyze_user_interests(user_id: str):
+    # Simulate user interests
     return ["technology", "music", "education"]
 
 
@@ -29,22 +30,18 @@ def fetch_lyrics_and_translations(tracks: List[str]):
 def recommend_languages(request: LanguageRecommendationRequest) -> LanguageRecommendationResponse:
     interests = analyze_user_interests(request.user_id)
     genres = ["Pop", "Rock", "Jazz"]
-    podcasts = []
-    music_tracks = []
-    for language in request.languages:
-        podcasts.extend(fetch_podcasts(interests, language))
-        music_tracks.extend(fetch_music_tracks(genres, language))
+    podcasts = [pod for lang in request.languages for pod in fetch_podcasts(interests, lang)]
+    music_tracks = [track for lang in request.languages for track in fetch_music_tracks(genres, lang)]
 
-    vectorizer = TfidfVectorizer()
+    # Combine interests and genres for similarity
     interests_genres = interests + genres
+    vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(interests_genres)
-
     cosine_similarities = linear_kernel(tfidf_matrix, tfidf_matrix)
+    top_indices = cosine_similarities.argsort().flatten()[-10:]
 
-    top_recommendations = cosine_similarities.argsort().flatten()[-10:]
-
-    recommended_podcasts = [podcasts[i] for i in top_recommendations if i < len(podcasts)]
-    recommended_music_tracks = [music_tracks[i - len(podcasts)] for i in top_recommendations if i >= len(podcasts)]
+    recommended_podcasts = [podcasts[i] for i in top_indices if i < len(podcasts)]
+    recommended_music_tracks = [music_tracks[i - len(podcasts)] for i in top_indices if i >= len(podcasts)]
 
     playlist_url = create_playlist(recommended_music_tracks)
     lyrics, translations = fetch_lyrics_and_translations(recommended_music_tracks)

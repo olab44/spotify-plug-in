@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import DynamicPlaylists from "./pages/DynamicPlaylists";
 import LanguageRecommendation from "./pages/LanguageRecommendation";
 import Callback from './pages/Callback';
+import TopTracks from "./pages/TopTracks";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App: React.FC = () => (
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dynamic-playlists" element={<DynamicPlaylists />} />
         <Route path="/language-recommendation" element={<LanguageRecommendation />} />
+        <Route path="/top-tracks" element={<TopTracks />} />
         <Route path="/404" element={<NotFound />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
