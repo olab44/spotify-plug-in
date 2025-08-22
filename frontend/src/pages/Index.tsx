@@ -1,68 +1,124 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
-import { Music, Headphones, Languages } from 'lucide-react';
 import LoginButton from '@/components/LoginButton';
+import FeatureCard from '@/components/FeatureCard';
+import { Music, Headphones, Languages } from 'lucide-react';
 
 const Index: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen w-full bg-background relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full spotlight" />
-      
-      <div className="container mx-auto px-4 py-20 relative z-10">
+    <SpotlightContainer>
+      <ContentContainer>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-3xl mx-auto"
         >
-          <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-spotify-green/20 bg-spotify-green/10">
-            <span className="text-sm font-medium text-spotify-green">
-              Your Music Journey Starts Here
-            </span>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-            Discover Your
-            <span className="text-gradient"> Musical Universe</span>
-          </h1>
-          
-          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-            Dive deep into your listening habits, discover new music, and learn languages through songs. All in one beautiful experience.
-          </p>
-          
-          <LoginButton />
+          <HeaderSection>
+            <Pill>Your Music Journey Starts Here</Pill>
+            <Title>
+              Discover Your<GradientSpan> Musical Universe</GradientSpan>
+            </Title>
+            <Subtitle>
+              Dive deep into your listening habits, discover new music, and learn languages through songs. All in one beautiful experience.
+            </Subtitle>
+            <LoginButton />
+          </HeaderSection>
         </motion.div>
 
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="flex flex-col items-center">
-            <Music className="w-12 h-12 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Smart Analytics</h3>
-            <p className="text-muted-foreground text-center">
-              Get detailed insights about your music taste and listening habits.
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <Headphones className="w-12 h-12 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Discover New Music</h3>
-            <p className="text-muted-foreground text-center">
-              Explore new songs and artists based on your preferences.
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <Languages className="w-12 h-12 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Learn Languages</h3>
-            <p className="text-muted-foreground text-center">
-              Improve your language skills through music and lyrics.
-            </p>
-          </div>
+          <FeatureCard
+            icon={Music}
+            title="Smart Analytics"
+            description="Get detailed insights about your music taste and listening habits."
+          />
+          <FeatureCard
+            icon={Headphones}
+            title="Discover New Music"
+            description="Explore new songs and artists based on your preferences."
+          />
+          <FeatureCard
+            icon={Languages}
+            title="Learn Languages"
+            description="Improve your language skills through music and lyrics."
+          />
         </div>
-      </div>
-    </div>
+      </ContentContainer>
+    </SpotlightContainer>
   );
 };
 
 export default Index;
+
+export const SpotlightContainer = styled.div`
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--background);
+  position: relative;
+  overflow: hidden;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(25, 203, 126, 0.1) 0%, transparent 60%);
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+`;
+
+export const ContentContainer = styled.div`
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 5rem 1rem;
+  position: relative;
+  z-index: 10;
+`;
+
+export const HeaderSection = styled.div`
+  text-align: center;
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+`;
+
+export const Pill = styled.div`
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(25, 203, 126, 0.2);
+  background-color: rgba(25, 203, 126, 0.1);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #19cb7e;
+`;
+
+export const Title = styled.h1`
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: 768px) {
+    font-size: 4rem;
+  }
+`;
+
+export const GradientSpan = styled.span`
+  background: linear-gradient(to right, #1db954, #19cb7e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+export const Subtitle = styled.p`
+  color: var(--muted-foreground);
+  font-size: 1.125rem;
+  line-height: 1.625;
+  margin-bottom: 2rem;
+`;

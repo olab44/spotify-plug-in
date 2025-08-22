@@ -55,6 +55,14 @@ const Dashboard: React.FC = () => {
         <>
           <h1 className="text-3xl font-bold mb-4">Welcome, {user.display_name}!</h1>
           <p className="text-gray-700 mb-6">Email: {user.email}</p>
+          <div className="my-8">
+            <a
+              href="/top-tracks"
+              className="block bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-6 px-8 rounded-lg shadow-lg text-center transition-all duration-200"
+            >
+              🎶 View Your Top 50 Tracks
+            </a>
+          </div>
         </>
       ) : (
         <p className="text-xl text-gray-600">Loading user info...</p>
