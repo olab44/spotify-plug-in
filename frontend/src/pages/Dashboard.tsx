@@ -1,53 +1,15 @@
-// Dashboard.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React from "react";
+import { Link } from "react-router-dom";
 import LogoutButton from '@/components/LogoutButton';
+import LoadingIndicator from '@/components/LoadingIndicator';
+import { useUserInfo } from '@/hooks/useUserInfo';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<{ display_name: string; email: string } | null>(null);
+  const { user, loading } = useUserInfo();
 
-  useEffect(() => {
-    let accessToken = localStorage.getItem("access_token");
-    if (!accessToken) {
-      const params = new URLSearchParams(window.location.search);
-      const tokenFromUrl = params.get("access_token");
-      const expiresInFromUrl = params.get("expires_in");
-
-      if (tokenFromUrl) {
-        accessToken = tokenFromUrl;
-        localStorage.setItem("access_token", accessToken);
-        if (expiresInFromUrl) {
-          localStorage.setItem("expires_in", expiresInFromUrl);
-        }
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-
-    if (!accessToken) {
-      console.error("No access token found in localStorage or URL. Redirecting to login.");
-      navigate("/");
-      return;
-    }
-
-    const fetchUserInfo = async () => {
-      try {
-        const response = await axios.get("http://localhost:8000/spotify/me", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        setUser(response.data);
-
-      } catch (error) {
-        console.error("Failed to fetch user info:", error);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("expires_in");
-        navigate("/");
-      }
-    };
-
-    fetchUserInfo();
-  }, [navigate]);
+  if (loading) {
+    return <LoadingIndicator />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -55,17 +17,23 @@ const Dashboard: React.FC = () => {
         <>
           <h1 className="text-3xl font-bold mb-4">Welcome, {user.display_name}!</h1>
           <p className="text-gray-700 mb-6">Email: {user.email}</p>
-          <div className="my-8">
-            <a
-              href="/top-tracks"
-              className="block bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-6 px-8 rounded-lg shadow-lg text-center transition-all duration-200"
-            >
-              🎶 View Your Top 50 Tracks
-            </a>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+            <Link to="/top-tracks" className="flex flex-col items-center justify-center bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-12 px-8 rounded-lg shadow-lg text-center transition-all duration-200">
+              <span className="text-4xl mb-2"></span>
+              <span>Top Tracks</span>
+            </Link>
+            <Link to="/top-artists" className="flex flex-col items-center justify-center bg-purple-500 hover:bg-purple-600 text-white text-2xl font-bold py-12 px-8 rounded-lg shadow-lg text-center transition-all duration-200">
+              <span className="text-4xl mb-2"></span>
+              <span>Top Artists</span>
+            </Link>
+            <Link to="/top-genres" className="flex flex-col items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-12 px-8 rounded-lg shadow-lg text-center transition-all duration-200">
+              <span className="text-4xl mb-2"></span>
+              <span>Top Genres</span>
+            </Link>
           </div>
         </>
       ) : (
-        <p className="text-xl text-gray-600">Loading user info...</p>
+        <LoadingIndicator />
       )}
       <LogoutButton />
     </div>

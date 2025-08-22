@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import styled from "@emotion/styled";
+import { useTopTracks } from "@/hooks/useGetTopTracks";
+import LoadingIndicator from "@/components/LoadingIndicator";
+import TimeRangeSelector from "@/components/TimeRangeSelector";
 
 const PERIODS = [
   { label: "Last 4 weeks", value: "short-term" },
@@ -11,53 +12,14 @@ const PERIODS = [
 
 const TopTracks: React.FC = () => {
   const [period, setPeriod] = useState("medium-term");
-  const [tracks, setTracks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const fetchTracks = async (selectedPeriod: string) => {
-    const accessToken = localStorage.getItem("access_token");
-
-    if (!accessToken) {
-      navigate("/");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.get(`http://localhost:8000/top-tracks/${selectedPeriod}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      setTracks(response.data);
-    } catch (err) {
-      console.error("Failed to fetch tracks:", err);
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        navigate("/");
-      }
-      setTracks([]);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchTracks(period);
-  }, [period, navigate]);
+  const { tracks, loading } = useTopTracks(period);
 
   return (
     <PageContainer>
       <Title>Your Top 50 Tracks</Title>
-      <PeriodButtonsContainer>
-        {PERIODS.map((p) => (
-          <PeriodButton key={p.value} isActive={period === p.value} onClick={() => setPeriod(p.value)}>
-            {p.label}
-          </PeriodButton>
-        ))}
-      </PeriodButtonsContainer>
+      <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
       {loading ? (
-        <LoadingText>Loading...</LoadingText>
+        <LoadingIndicator />
       ) : (
         <TracksList>
           {tracks.map((track, idx) => (
@@ -89,27 +51,6 @@ const Title = styled.h2`
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-`;
-
-const PeriodButtonsContainer = styled.div`
-  margin-bottom: 1.5rem;
-  display: flex;
-  gap: 1rem;
-`;
-
-const PeriodButton = styled.button<{ isActive: boolean }>`
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  background-color: ${(props) => (props.isActive ? "#16a34a" : "#e5e7eb")};
-  color: ${(props) => (props.isActive ? "white" : "#4b5563")};
-  &:hover {
-    background-color: ${(props) => (props.isActive ? "#15803d" : "#d1d5db")};
-  }
-`;
-
-const LoadingText = styled.p`
-  font-size: 1.25rem;
-  color: #6b7280;
 `;
 
 const TracksList = styled.div`

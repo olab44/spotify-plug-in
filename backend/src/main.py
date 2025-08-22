@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.login.router import router as login_router
 from src.user.router import router as user_router
 from src.top_tracks.router import router as top_tracks_router
+from src.artists.router import router as artists_router
 
 app = FastAPI()
 
@@ -17,3 +18,4 @@ app.add_middleware(
 app.include_router(login_router, prefix="/spotify")
 app.include_router(user_router, prefix="/user")
 app.include_router(top_tracks_router, prefix="/top-tracks")
+app.include_router(artists_router, prefix="/top-artists")
