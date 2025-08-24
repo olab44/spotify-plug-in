@@ -1,22 +1,20 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
-const LogoutButton = () => {
-    const navigate = useNavigate();
+export const LogoutButton = () => {
+  const navigate = useNavigate();
 
-    const handleLogout = () => {
-        localStorage.removeItem("access_token");
-        
-        navigate("/");
-    };
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
 
-    return (
-        <button 
-            onClick={handleLogout} 
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        >
-            Logout
-        </button>
-    );
+    navigate('/');
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+    >
+      Logout
+    </button>
+  );
 };
-
-export default LogoutButton;

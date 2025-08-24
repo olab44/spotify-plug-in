@@ -1,8 +1,8 @@
-import React from "react";
+import React from 'react';
 
-const Index: React.FC = () => {
+export const LoginButton: React.FC = () => {
   const handleLogin = () => {
-    window.location.href = "http://localhost:8000/spotify/login";
+    window.location.href = 'http://localhost:8000/spotify/login';
   };
 
   return (
@@ -16,5 +16,3 @@ const Index: React.FC = () => {
     </div>
   );
 };
-
-export default Index;

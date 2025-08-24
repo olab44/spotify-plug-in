@@ -1,5 +1,7 @@
-import LoadingIndicator from '@/components/LoadingIndicator';
+import { PageContainer, Title } from '@/components/StyledComponents';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
+import { TopStatsList } from '@/components/TopStatsList';
+import { TopStatsRow } from '@/components/TopStatsRow';
 import { useTopTracks } from '@/hooks/useGetTopTracks';
 import styled from '@emotion/styled';
 import React, { useState } from 'react';
@@ -7,102 +9,50 @@ import React, { useState } from 'react';
 const PERIODS = [
   { label: 'Last 4 weeks', value: 'short-term' },
   { label: 'Last 6 months', value: 'medium-term' },
-  { label: 'All time', value: 'long-term' },
+  { label: 'Last 12 months', value: 'long-term' },
 ];
 
-const TopTracks: React.FC = () => {
+export const TopTracks: React.FC = () => {
   const [period, setPeriod] = useState('medium-term');
-  const { tracks, loading } = useTopTracks(period);
+  const { tracks, loading, error } = useTopTracks(period);
 
   return (
     <PageContainer>
       <Title>Your Top 50 Tracks</Title>
       <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
-      {loading ? (
-        <LoadingIndicator />
-      ) : (
-        <TracksList>
-          {tracks.map((track, idx) => (
-            <TrackCard key={track.id}>
-              <TrackIndex>{idx + 1}.</TrackIndex>
-              <TrackImage
-                src={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
-                alt={track.name}
-              />
-              <TrackDetails>
-                <TrackName>{track.name}</TrackName>
-                <TrackArtists>{track.artists.map((a: any) => a.name).join(', ')}</TrackArtists>
-                <TrackAlbum>{track.album.name}</TrackAlbum>
-              </TrackDetails>
-            </TrackCard>
-          ))}
-        </TracksList>
-      )}
+      <TopStatsList
+        loading={loading}
+        error={error}
+        items={tracks}
+        renderRow={(track, idx) => (
+          <ClickableCardWrapper
+            key={track.id}
+            href={track.external_urls.spotify}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <TopStatsRow
+              rank={idx + 1}
+              imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
+              primaryText={track.name}
+              secondaryText={track.artists.map((a: any) => a.name).join(', ')}
+              tertiaryText={track.album.name}
+            />
+          </ClickableCardWrapper>
+        )}
+      />
     </PageContainer>
   );
 };
 
-export default TopTracks;
+const ClickableCardWrapper = styled.a`
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 
-const PageContainer = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-`;
-
-const Title = styled.h2`
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-`;
-
-const TracksList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-`;
-
-const TrackCard = styled.div`
-  background-color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`;
-
-const TrackImage = styled.img`
-  width: 64px;
-  height: 64px;
-  border-radius: 0.25rem;
-`;
-
-const TrackDetails = styled.div`
-  flex-grow: 1;
-`;
-
-const TrackName = styled.div`
-  font-weight: bold;
-  font-size: 1.125rem;
-  margin-bottom: 0.25rem;
-`;
-
-const TrackArtists = styled.div`
-  color: #6b7280;
-  font-size: 0.875rem;
-`;
-
-const TrackAlbum = styled.div`
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-top: 0.25rem;
-`;
-
-const TrackIndex = styled.div`
-  font-weight: bold;
-  font-size: 1.25rem;
-  min-width: 2rem;
-  text-align: right;
-  color: #4b5563;
+  &:hover > div {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -4px rgba(0, 0, 0, 0.08);
+  }
 `;

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Callback = () => {
+export const Callback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,5 +18,3 @@ const Callback = () => {
 
   return <div>Loading...</div>;
 };
-
-export default Callback;

@@ -1,10 +1,10 @@
-import LoadingIndicator from '@/components/LoadingIndicator';
-import LogoutButton from '@/components/LogoutButton';
+import { LoadingIndicator } from '@/components/LoadingIndicator';
+import { LogoutButton } from '@/components/LogoutButton';
 import { useUserInfo } from '@/hooks/useUserInfo';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Dashboard: React.FC = () => {
+export const Dashboard: React.FC = () => {
   const { user, loading } = useUserInfo();
 
   if (loading) {
@@ -48,5 +48,3 @@ const Dashboard: React.FC = () => {
     </div>
   );
 };
-
-export default Dashboard;

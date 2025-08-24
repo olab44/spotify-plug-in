@@ -1,11 +1,11 @@
-import FeatureCard from '@/components/FeatureCard';
-import LoginButton from '@/components/LoginButton';
+import { FeatureCard } from '@/components/FeatureCard';
+import { LoginButton } from '@/components/LoginButton';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
 import { Headphones, Languages, Music } from 'lucide-react';
 import React from 'react';
 
-const Index: React.FC = () => {
+export const Index: React.FC = () => {
   return (
     <SpotlightContainer>
       <ContentContainer>
@@ -48,8 +48,6 @@ const Index: React.FC = () => {
     </SpotlightContainer>
   );
 };
-
-export default Index;
 
 export const SpotlightContainer = styled.div`
   min-height: 100vh;

@@ -1,15 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Callback from './views/Callback';
-import Dashboard from './views/Dashboard';
+import { Callback } from './views/Callback';
+import { Dashboard } from './views/Dashboard';
 import DynamicPlaylists from './views/DynamicPlaylists';
-import Index from './views/Index';
+import { Index } from './views/Index';
 import LanguageRecommendation from './views/LanguageRecommendation';
-import NotFound from './views/NotFound';
-import TopArtists from './views/TopArtists';
-import TopGenresPage from './views/TopGenres';
-import TopTracks from './views/TopTracks';
+import { NotFound } from './views/NotFound';
+import { TopArtists } from './views/TopArtists';
+import { TopGenresPage } from './views/TopGenres';
+import { TopTracks } from './views/TopTracks';
 
 const queryClient = new QueryClient();
 
