@@ -1,10 +1,10 @@
 import LoadingIndicator from '@/components/LoadingIndicator';
 import LogoutButton from '@/components/LogoutButton';
 import { useGetTopGenres } from '@/hooks/useGetTopGenres';
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 const TopGenresPage: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("medium-term");
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('medium-term');
 
   const { genres, loading } = useGetTopGenres(selectedPeriod);
 
@@ -19,14 +19,15 @@ const TopGenresPage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6 text-center">Your Top Genres</h1>
 
       <div className="flex justify-center space-x-4 mb-8">
-        {["short-term", "medium-term", "long-term"].map((period) => (
+        {['short-term', 'medium-term', 'long-term'].map((period) => (
           <button
             key={period}
             onClick={() => setSelectedPeriod(period)}
             className={`py-2 px-4 rounded-lg font-semibold transition-colors duration-200
-              ${selectedPeriod === period
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              ${
+                selectedPeriod === period
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
               }`}
           >
             {capitalize(period.replace('-', ' '))}
@@ -44,9 +45,7 @@ const TopGenresPage: React.FC = () => {
               <span className="text-xl font-medium text-gray-800">
                 {index + 1}. {capitalize(genreItem.genre)}
               </span>
-              <span className="text-lg text-gray-600">
-                ({genreItem.count} artists)
-              </span>
+              <span className="text-lg text-gray-600">({genreItem.count} artists)</span>
             </div>
           ))}
         </div>

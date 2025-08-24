@@ -10,7 +10,9 @@ def get_top_tracks(access_token: str, time_range: str = "medium_term", limit: in
     params = {"time_range": time_range, "limit": limit}
 
     try:
-        response = requests.get(f"{SPOTIFY_API_BASE_URL}/me/top/tracks", headers=headers, params=params)
+        response = requests.get(
+            f"{SPOTIFY_API_BASE_URL}/me/top/tracks", headers=headers, params=params
+        )
         response.raise_for_status()
         return response.json()["items"]
     except requests.exceptions.HTTPError as e:

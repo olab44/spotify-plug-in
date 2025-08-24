@@ -1,17 +1,17 @@
-import React, { useState } from "react";
-import styled from "@emotion/styled";
-import { useTopTracks } from "@/hooks/useGetTopTracks";
-import LoadingIndicator from "@/components/LoadingIndicator";
-import TimeRangeSelector from "@/components/TimeRangeSelector";
+import LoadingIndicator from '@/components/LoadingIndicator';
+import TimeRangeSelector from '@/components/TimeRangeSelector';
+import { useTopTracks } from '@/hooks/useGetTopTracks';
+import styled from '@emotion/styled';
+import React, { useState } from 'react';
 
 const PERIODS = [
-  { label: "Last 4 weeks", value: "short-term" },
-  { label: "Last 6 months", value: "medium-term" },
-  { label: "All time", value: "long-term" },
+  { label: 'Last 4 weeks', value: 'short-term' },
+  { label: 'Last 6 months', value: 'medium-term' },
+  { label: 'All time', value: 'long-term' },
 ];
 
 const TopTracks: React.FC = () => {
-  const [period, setPeriod] = useState("medium-term");
+  const [period, setPeriod] = useState('medium-term');
   const { tracks, loading } = useTopTracks(period);
 
   return (
@@ -25,10 +25,13 @@ const TopTracks: React.FC = () => {
           {tracks.map((track, idx) => (
             <TrackCard key={track.id}>
               <TrackIndex>{idx + 1}.</TrackIndex>
-              <TrackImage src={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url} alt={track.name} />
+              <TrackImage
+                src={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
+                alt={track.name}
+              />
               <TrackDetails>
                 <TrackName>{track.name}</TrackName>
-                <TrackArtists>{track.artists.map((a: any) => a.name).join(", ")}</TrackArtists>
+                <TrackArtists>{track.artists.map((a: any) => a.name).join(', ')}</TrackArtists>
                 <TrackAlbum>{track.album.name}</TrackAlbum>
               </TrackDetails>
             </TrackCard>

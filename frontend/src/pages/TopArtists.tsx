@@ -1,18 +1,17 @@
-import React, { useState } from "react";
-import styled from "@emotion/styled";
-import { useTopArtists } from "@/hooks/useGetTopArtists"; 
-import LoadingIndicator from "@/components/LoadingIndicator"; 
-import TimeRangeSelector from "@/components/TimeRangeSelector"; 
-
+import LoadingIndicator from '@/components/LoadingIndicator';
+import TimeRangeSelector from '@/components/TimeRangeSelector';
+import { useTopArtists } from '@/hooks/useGetTopArtists';
+import styled from '@emotion/styled';
+import React, { useState } from 'react';
 
 const PERIODS = [
-  { label: "Last 4 weeks", value: "short-term" },
-  { label: "Last 6 months", value: "medium-term" },
-  { label: "All time", value: "long-term" },
+  { label: 'Last 4 weeks', value: 'short-term' },
+  { label: 'Last 6 months', value: 'medium-term' },
+  { label: 'All time', value: 'long-term' },
 ];
 
 const TopArtists: React.FC = () => {
-  const [period, setPeriod] = useState("medium-term");
+  const [period, setPeriod] = useState('medium-term');
 
   const { artists, loading, error } = useTopArtists(period);
 
@@ -29,19 +28,26 @@ const TopArtists: React.FC = () => {
         <ArtistsList>
           {artists.length > 0 ? (
             artists.map((artist, idx) => (
-              <ArtistCard key={artist.id} onClick={() => window.open(artist.external_urls.spotify, "_blank")}>
+              <ArtistCard
+                key={artist.id}
+                onClick={() => window.open(artist.external_urls.spotify, '_blank')}
+              >
                 <ArtistIndex>{idx + 1}.</ArtistIndex>
                 <ArtistImage
-                  src={artist.images?.[1]?.url || artist.images?.[0]?.url || "https://placehold.co/64x64/E0E0E0/333333?text=No+Image"}
+                  src={
+                    artist.images?.[1]?.url ||
+                    artist.images?.[0]?.url ||
+                    'https://placehold.co/64x64/E0E0E0/333333?text=No+Image'
+                  }
                   alt={artist.name}
                   onError={(e) => {
-                    e.currentTarget.src = "https://placehold.co/64x64/E0E0E0/333333?text=No+Image";
+                    e.currentTarget.src = 'https://placehold.co/64x64/E0E0E0/333333?text=No+Image';
                   }}
                 />
                 <ArtistDetails>
                   <ArtistName>{artist.name}</ArtistName>
                   {artist.genres && artist.genres.length > 0 && (
-                    <ArtistGenres>{artist.genres.slice(0, 3).join(", ")}</ArtistGenres>
+                    <ArtistGenres>{artist.genres.slice(0, 3).join(', ')}</ArtistGenres>
                   )}
                 </ArtistDetails>
               </ArtistCard>
@@ -68,7 +74,7 @@ const PageContainer = styled.div`
 const Title = styled.h2`
   font-size: 2.25rem; /* Tailwind text-4xl, slightly reduced for better fit */
   font-weight: 700; /* Tailwind font-bold */
-  color: #1DB954; /* Spotify Green */
+  color: #1db954; /* Spotify Green */
   text-align: center;
   margin-bottom: 2rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);

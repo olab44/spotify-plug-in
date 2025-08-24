@@ -1,18 +1,18 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Callback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const token = hashParams.get("access_token");
+    const token = hashParams.get('access_token');
 
     if (token) {
-      localStorage.setItem("access_token", token);
-      navigate("/dashboard", { replace: true });
+      localStorage.setItem('access_token', token);
+      navigate('/dashboard', { replace: true });
     } else {
-      navigate("/");
+      navigate('/');
     }
   }, [navigate]);
 

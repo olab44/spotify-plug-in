@@ -1,10 +1,15 @@
 import requests
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from src.config.constants import (DEFAULT_SCOPES, SPOTIFY_API_BASE_URL,
-                                  SPOTIFY_AUTH_URL, SPOTIFY_CLIENT_ID,
-                                  SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI,
-                                  SPOTIFY_TOKEN_URL)
+from src.config.constants import (
+    DEFAULT_SCOPES,
+    SPOTIFY_API_BASE_URL,
+    SPOTIFY_AUTH_URL,
+    SPOTIFY_CLIENT_ID,
+    SPOTIFY_CLIENT_SECRET,
+    SPOTIFY_REDIRECT_URI,
+    SPOTIFY_TOKEN_URL,
+)
 from src.login.schemas import SpotifyToken, SpotifyUser
 
 
@@ -36,7 +41,10 @@ def get_spotify_token(code: str) -> SpotifyToken:
         response.raise_for_status()
         return SpotifyToken(**response.json())
     except requests.exceptions.HTTPError as e:
-        raise HTTPException(status_code=e.response.status_code, detail="Failed to get token from Spotify")
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail="Failed to get token from Spotify",
+        )
 
 
 def get_spotify_user_info(access_token: str) -> SpotifyUser:
@@ -47,7 +55,10 @@ def get_spotify_user_info(access_token: str) -> SpotifyUser:
         response.raise_for_status()
         return SpotifyUser(**response.json())
     except requests.exceptions.HTTPError as e:
-        raise HTTPException(status_code=e.response.status_code, detail="Failed to fetch user info from Spotify")
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail="Failed to fetch user info from Spotify",
+        )
 
 
 oauth2_scheme = HTTPBearer()
@@ -56,6 +67,8 @@ oauth2_scheme = HTTPBearer()
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme)):
     """Dependency to get the current user's token from a bearer token."""
     if not token.credentials:
-        raise HTTPException(status_code=401, detail="Not authenticated: No bearer token provided")
+        raise HTTPException(
+            status_code=401, detail="Not authenticated: No bearer token provided"
+        )
 
     return {"access_token": token.credentials}

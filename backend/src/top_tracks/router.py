@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from .service import (
-    get_top_tracks_short_term,
-    get_top_tracks_medium_term,
-    get_top_tracks_long_term
-)
 from src.login.service import get_current_user
+
+from .service import (
+    get_top_tracks_long_term,
+    get_top_tracks_medium_term,
+    get_top_tracks_short_term,
+)
 
 router = APIRouter()
 

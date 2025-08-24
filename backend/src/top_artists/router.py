@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.login.service import get_current_user
 
-from .service import (get_top_artists_long_term, get_top_artists_medium_term,
-                      get_top_artists_short_term)
+from .service import (
+    get_top_artists_long_term,
+    get_top_artists_medium_term,
+    get_top_artists_short_term,
+)
 
 router = APIRouter()
 

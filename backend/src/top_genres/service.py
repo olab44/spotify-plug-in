@@ -32,18 +32,19 @@ def get_top_genres(access_token: str, time_range: str = "medium_term", limit: in
 
         all_genres = []
         for artist in artists:
-            if 'genres' in artist and isinstance(artist['genres'], list):
-                all_genres.extend(artist['genres'])
+            if "genres" in artist and isinstance(artist["genres"], list):
+                all_genres.extend(artist["genres"])
 
         if not all_genres:
             return None
 
         genre_counts = Counter(all_genres)
 
-        sorted_genres = sorted([
-            {"genre": genre, "count": count}
-            for genre, count in genre_counts.items()
-        ], key=lambda x: x['count'], reverse=True)
+        sorted_genres = sorted(
+            [{"genre": genre, "count": count} for genre, count in genre_counts.items()],
+            key=lambda x: x["count"],
+            reverse=True,
+        )
 
         return sorted_genres
 

@@ -17,19 +17,29 @@ const DynamicPlaylists: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h3 className="text-xl font-semibold mb-2">Discovery Playlist</h3>
-          <p>Automatically updated every 12 hours. Contains 15-20 new songs (most listened to recently).</p>
+          <p>
+            Automatically updated every 12 hours. Contains 15-20 new songs (most listened to
+            recently).
+          </p>
           <ul>
             {discoveryPlaylist.map((song, index) => (
-              <li key={index}>{song.song} - {song.artist}</li>
+              <li key={index}>
+                {song.song} - {song.artist}
+              </li>
             ))}
           </ul>
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2">Best Songs Playlist</h3>
-          <p>A permanent playlist containing the 100 most listened songs in the user's history. Updated automatically based on Spotify data.</p>
+          <p>
+            A permanent playlist containing the 100 most listened songs in the user's history.
+            Updated automatically based on Spotify data.
+          </p>
           <ul>
             {bestSongsPlaylist.map((song, index) => (
-              <li key={index}>{song.song} - {song.artist}</li>
+              <li key={index}>
+                {song.song} - {song.artist}
+              </li>
             ))}
           </ul>
         </div>

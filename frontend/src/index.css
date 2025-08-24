@@ -27,7 +27,7 @@
     --ring: 142 72% 29%;
     --radius: 0.75rem;
   }
- 
+
   .dark {
     --background: 20 14.3% 4.1%;
     --foreground: 0 0% 95%;
@@ -57,7 +57,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+    font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02', 'cv03';
     font-family: 'Inter', sans-serif;
   }
 }
@@ -66,20 +66,16 @@
   .glass {
     @apply bg-white/10 backdrop-blur-lg border border-white/20;
   }
-  
+
   .glass-dark {
     @apply bg-black/40 backdrop-blur-lg border border-white/10;
   }
-  
+
   .text-gradient {
     @apply bg-gradient-to-r from-spotify-green to-emerald-400 bg-clip-text text-transparent;
   }
 }
 
 .spotlight {
-  background: radial-gradient(
-    600px circle at 0px 0px,
-    rgba(29, 185, 84, 0.15),
-    transparent 40%
-  );
+  background: radial-gradient(600px circle at 0px 0px, rgba(29, 185, 84, 0.15), transparent 40%);
 }

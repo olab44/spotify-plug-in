@@ -2,7 +2,9 @@ import requests
 from src.config.constants import SPOTIFY_API_BASE_URL
 
 
-def get_top_artists(access_token: str, time_range: str = "medium_term", limit: int = 50):
+def get_top_artists(
+    access_token: str, time_range: str = "medium_term", limit: int = 50
+):
     if not access_token:
         return None
 
@@ -10,7 +12,9 @@ def get_top_artists(access_token: str, time_range: str = "medium_term", limit: i
     params = {"time_range": time_range, "limit": limit}
 
     try:
-        response = requests.get(f"{SPOTIFY_API_BASE_URL}/me/top/artists", headers=headers, params=params)
+        response = requests.get(
+            f"{SPOTIFY_API_BASE_URL}/me/top/artists", headers=headers, params=params
+        )
         response.raise_for_status()
         return response.json()["items"]
     except requests.exceptions.HTTPError as e:
