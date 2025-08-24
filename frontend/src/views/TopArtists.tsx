@@ -1,3 +1,4 @@
+import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { PageContainer, Title } from '@/components/StyledComponents';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import { TopStatsList } from '@/components/TopStatsList';
@@ -17,31 +18,34 @@ export const TopArtists: React.FC = () => {
   const { artists, loading, error } = useTopArtists(period);
 
   return (
-    <PageContainer>
-      <Title>Your Top Artists</Title>
-      <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
-      <TopStatsList
-        loading={loading}
-        error={error}
-        items={artists}
-        renderRow={(artist, idx) => (
-          <ClickableCardWrapper
-            key={artist.id}
-            href={artist.external_urls.spotify}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <TopStatsRow
-              rank={idx + 1}
-              imageUrl={artist.images?.[1]?.url || artist.images?.[0]?.url}
-              primaryText={artist.name}
-              secondaryText={artist.genres.slice(0, 3).join(', ')}
-              isCircularImage
-            />
-          </ClickableCardWrapper>
-        )}
-      />
-    </PageContainer>
+    <LeftPanelProvider>
+      <LeftPanel />
+      <PageContainer>
+        <Title>Your Top Artists</Title>
+        <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
+        <TopStatsList
+          loading={loading}
+          error={error}
+          items={artists}
+          renderRow={(artist, idx) => (
+            <ClickableCardWrapper
+              key={artist.id}
+              href={artist.external_urls.spotify}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <TopStatsRow
+                rank={idx + 1}
+                imageUrl={artist.images?.[1]?.url || artist.images?.[0]?.url}
+                primaryText={artist.name}
+                secondaryText={artist.genres.slice(0, 3).join(', ')}
+                isCircularImage
+              />
+            </ClickableCardWrapper>
+          )}
+        />
+      </PageContainer>
+    </LeftPanelProvider>
   );
 };
 

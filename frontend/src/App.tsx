@@ -8,7 +8,7 @@ import { Index } from './views/Index';
 import LanguageRecommendation from './views/LanguageRecommendation';
 import { NotFound } from './views/NotFound';
 import { TopArtists } from './views/TopArtists';
-import { TopGenresPage } from './views/TopGenres';
+import TopGenres from './views/TopGenres';
 import { TopTracks } from './views/TopTracks';
 
 const queryClient = new QueryClient();
@@ -24,7 +24,7 @@ const App: React.FC = () => (
         <Route path="/language-recommendation" element={<LanguageRecommendation />} />
         <Route path="/top-tracks" element={<TopTracks />} />
         <Route path="/top-artists" element={<TopArtists />} />
-        <Route path="/top-genres" element={<TopGenresPage />} />
+        <Route path="/top-genres" element={<TopGenres />} />
         <Route path="/404" element={<NotFound />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

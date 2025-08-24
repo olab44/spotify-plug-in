@@ -1,3 +1,4 @@
+import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { PageContainer, Title } from '@/components/StyledComponents';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import { TopStatsList } from '@/components/TopStatsList';
@@ -17,31 +18,34 @@ export const TopTracks: React.FC = () => {
   const { tracks, loading, error } = useTopTracks(period);
 
   return (
-    <PageContainer>
-      <Title>Your Top 50 Tracks</Title>
-      <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
-      <TopStatsList
-        loading={loading}
-        error={error}
-        items={tracks}
-        renderRow={(track, idx) => (
-          <ClickableCardWrapper
-            key={track.id}
-            href={track.external_urls.spotify}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <TopStatsRow
-              rank={idx + 1}
-              imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
-              primaryText={track.name}
-              secondaryText={track.artists.map((a: any) => a.name).join(', ')}
-              tertiaryText={track.album.name}
-            />
-          </ClickableCardWrapper>
-        )}
-      />
-    </PageContainer>
+    <LeftPanelProvider>
+      <LeftPanel />
+      <PageContainer>
+        <Title>Your Top 50 Tracks</Title>
+        <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
+        <TopStatsList
+          loading={loading}
+          error={error}
+          items={tracks}
+          renderRow={(track, idx) => (
+            <ClickableCardWrapper
+              key={track.id}
+              href={track.external_urls.spotify}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <TopStatsRow
+                rank={idx + 1}
+                imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
+                primaryText={track.name}
+                secondaryText={track.artists.map((a: any) => a.name).join(', ')}
+                tertiaryText={track.album.name}
+              />
+            </ClickableCardWrapper>
+          )}
+        />
+      </PageContainer>
+    </LeftPanelProvider>
   );
 };
 

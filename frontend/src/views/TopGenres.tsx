@@ -1,3 +1,4 @@
+import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { PageContainer, Title } from '@/components/StyledComponents';
 import TimeRangeSelector from '@/components/TimeRangeSelector';
 import { TopStatsList } from '@/components/TopStatsList';
@@ -11,9 +12,9 @@ const PERIODS = [
   { label: 'Last 12 months', value: 'long-term' },
 ];
 
-export const TopGenresPage: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('medium-term');
-  const { genres, artists, loading, error } = useGetTopGenres(selectedPeriod);
+export const TopGenres: React.FC = () => {
+  const [period, setPeriod] = useState('medium-term');
+  const { genres, artists, loading, error } = useGetTopGenres(period);
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -30,32 +31,31 @@ export const TopGenresPage: React.FC = () => {
   };
 
   return (
-    <PageContainer>
-      <Title>Your Top Genres</Title>
-      <TimeRangeSelector
-        period={selectedPeriod}
-        onPeriodChange={setSelectedPeriod}
-        periods={PERIODS}
-      />
-      <TopStatsList
-        loading={loading}
-        error={error}
-        items={genres}
-        noDataMessage="No top genres found for this period. Listen to more music!"
-        renderRow={(genreItem, idx) => {
-          const genreArtists = getArtistsForGenre(genreItem.genre);
-          return (
-            <TopStatsRow
-              key={genreItem.genre}
-              rank={idx + 1}
-              primaryText={capitalize(genreItem.genre)}
-              secondaryText={`(${genreItem.count} artists)`}
-              spotifyUrl="#"
-              smallImages={genreArtists}
-            />
-          );
-        }}
-      />
-    </PageContainer>
+    <LeftPanelProvider>
+      <LeftPanel />
+      <PageContainer>
+        <Title>Your Top Genres</Title>
+        <TimeRangeSelector period={period} onPeriodChange={setPeriod} periods={PERIODS} />
+        <TopStatsList
+          loading={loading}
+          error={error}
+          items={genres}
+          noDataMessage="No top genres found for this period. Listen to more music!"
+          renderRow={(genreItem, idx) => {
+            const genreArtists = getArtistsForGenre(genreItem.genre);
+            return (
+              <TopStatsRow
+                key={genreItem.genre}
+                rank={idx + 1}
+                primaryText={capitalize(genreItem.genre)}
+                secondaryText={`(${genreItem.count} artists)`}
+                spotifyUrl={undefined}
+                smallImages={genreArtists}
+              />
+            );
+          }}
+        />
+      </PageContainer>
+    </LeftPanelProvider>
   );
 };
