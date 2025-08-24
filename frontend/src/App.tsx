@@ -8,7 +8,7 @@ import { Index } from './views/Index';
 import LanguageRecommendation from './views/LanguageRecommendation';
 import { NotFound } from './views/NotFound';
 import { TopArtists } from './views/TopArtists';
-import TopGenres from './views/TopGenres';
+import { TopGenres } from './views/TopGenres';
 import { TopTracks } from './views/TopTracks';
 
 const queryClient = new QueryClient();

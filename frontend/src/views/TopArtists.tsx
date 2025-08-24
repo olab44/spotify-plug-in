@@ -39,6 +39,11 @@ export const TopArtists: React.FC = () => {
                 imageUrl={artist.images?.[1]?.url || artist.images?.[0]?.url}
                 primaryText={artist.name}
                 secondaryText={artist.genres.slice(0, 3).join(', ')}
+                tertiaryText={
+                  artist.playlist_song_count > 0
+                    ? `Songs in your playlists: ${artist.playlist_song_count}`
+                    : null
+                }
                 isCircularImage
               />
             </ClickableCardWrapper>
