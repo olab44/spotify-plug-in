@@ -46,7 +46,7 @@ def get_top_genres(access_token: str, time_range: str = "medium_term", limit: in
             reverse=True,
         )
 
-        return sorted_genres
+        return sorted_genres[:10]
 
     except requests.exceptions.HTTPError as e:
         print(f"Error fetching top artists for genre aggregation: {e}")

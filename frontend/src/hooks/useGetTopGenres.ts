@@ -1,6 +1,20 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+interface ArtistImage {
+  url: string;
+}
+
+interface Artist {
+  id: string;
+  name: string;
+  genres: string[];
+  images: ArtistImage[];
+  external_urls: {
+    spotify: string;
+  };
+}
 
 interface GenreItem {
   genre: string;
@@ -9,41 +23,50 @@ interface GenreItem {
 
 export const useGetTopGenres = (period: string) => {
   const [genres, setGenres] = useState<GenreItem[]>([]);
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchGenres = async () => {
-      const accessToken = localStorage.getItem("access_token");
+    const fetchTopData = async () => {
+      const accessToken = localStorage.getItem('access_token');
 
       if (!accessToken) {
-        console.error("useTopGenres: No access token found. Redirecting to login.");
-        navigate("/");
+        console.error('useGetTopGenres: No access token found. Redirecting to login.');
+        navigate('/');
         return;
       }
 
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:8000/top-genres/${period}`, {
+        const genresResponse = await axios.get(`http://localhost:8000/top-genres/${period}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        setGenres(response.data);
+        setGenres(genresResponse.data);
+
+        const artistsResponse = await axios.get(`http://localhost:8000/top-artists/${period}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        setArtists(artistsResponse.data);
       } catch (err) {
-        console.error("useTopGenres: Failed to fetch genres:", err);
+        console.error('useGetTopGenres: Failed to fetch data:', err);
         if (axios.isAxiosError(err) && err.response?.status === 401) {
-          localStorage.removeItem("access_token");
-          navigate("/");
+          localStorage.removeItem('access_token');
+          navigate('/');
         }
         setGenres([]);
+        setArtists([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchGenres();
+    fetchTopData();
   }, [period, navigate]);
 
-  return { genres, loading };
+  return { genres, artists, loading };
 };
