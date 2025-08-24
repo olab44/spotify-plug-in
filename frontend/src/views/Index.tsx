@@ -1,11 +1,11 @@
-import React from 'react';
+import { FeatureCard } from '@/components/FeatureCard';
+import { LoginButton } from '@/components/LoginButton';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
-import LoginButton from '@/components/LoginButton';
-import FeatureCard from '@/components/FeatureCard';
-import { Music, Headphones, Languages } from 'lucide-react';
+import { Headphones, Languages, Music } from 'lucide-react';
+import React from 'react';
 
-const Index: React.FC = () => {
+export const Index: React.FC = () => {
   return (
     <SpotlightContainer>
       <ContentContainer>
@@ -20,7 +20,8 @@ const Index: React.FC = () => {
               Discover Your<GradientSpan> Musical Universe</GradientSpan>
             </Title>
             <Subtitle>
-              Dive deep into your listening habits, discover new music, and learn languages through songs. All in one beautiful experience.
+              Dive deep into your listening habits, discover new music, and learn languages through
+              songs. All in one beautiful experience.
             </Subtitle>
             <LoginButton />
           </HeaderSection>
@@ -48,15 +49,13 @@ const Index: React.FC = () => {
   );
 };
 
-export default Index;
-
 export const SpotlightContainer = styled.div`
   min-height: 100vh;
   width: 100%;
   background-color: var(--background);
   position: relative;
   overflow: hidden;
-  
+
   &:before {
     content: '';
     position: absolute;

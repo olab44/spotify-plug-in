@@ -1,6 +1,8 @@
 from typing import List
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
+
 from .schemas import LanguageRecommendationRequest, LanguageRecommendationResponse
 
 
@@ -27,11 +29,19 @@ def fetch_lyrics_and_translations(tracks: List[str]):
     return lyrics, translations
 
 
-def recommend_languages(request: LanguageRecommendationRequest) -> LanguageRecommendationResponse:
+def recommend_languages(
+    request: LanguageRecommendationRequest,
+) -> LanguageRecommendationResponse:
     interests = analyze_user_interests(request.user_id)
     genres = ["Pop", "Rock", "Jazz"]
-    podcasts = [pod for lang in request.languages for pod in fetch_podcasts(interests, lang)]
-    music_tracks = [track for lang in request.languages for track in fetch_music_tracks(genres, lang)]
+    podcasts = [
+        pod for lang in request.languages for pod in fetch_podcasts(interests, lang)
+    ]
+    music_tracks = [
+        track
+        for lang in request.languages
+        for track in fetch_music_tracks(genres, lang)
+    ]
 
     # Combine interests and genres for similarity
     interests_genres = interests + genres
@@ -41,7 +51,9 @@ def recommend_languages(request: LanguageRecommendationRequest) -> LanguageRecom
     top_indices = cosine_similarities.argsort().flatten()[-10:]
 
     recommended_podcasts = [podcasts[i] for i in top_indices if i < len(podcasts)]
-    recommended_music_tracks = [music_tracks[i - len(podcasts)] for i in top_indices if i >= len(podcasts)]
+    recommended_music_tracks = [
+        music_tracks[i - len(podcasts)] for i in top_indices if i >= len(podcasts)
+    ]
 
     playlist_url = create_playlist(recommended_music_tracks)
     lyrics, translations = fetch_lyrics_and_translations(recommended_music_tracks)
@@ -51,5 +63,5 @@ def recommend_languages(request: LanguageRecommendationRequest) -> LanguageRecom
         music_tracks=recommended_music_tracks,
         playlist_url=playlist_url,
         lyrics=lyrics,
-        translations=translations
+        translations=translations,
     )

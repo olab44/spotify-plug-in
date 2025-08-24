@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export const useTopTracks = (period: string) => {
   const [tracks, setTracks] = useState<any[]>([]);
@@ -9,10 +9,10 @@ export const useTopTracks = (period: string) => {
 
   useEffect(() => {
     const fetchTracks = async () => {
-      const accessToken = localStorage.getItem("access_token");
+      const accessToken = localStorage.getItem('access_token');
 
       if (!accessToken) {
-        navigate("/");
+        navigate('/');
         return;
       }
 
@@ -25,10 +25,10 @@ export const useTopTracks = (period: string) => {
         });
         setTracks(response.data);
       } catch (err) {
-        console.error("Failed to fetch tracks:", err);
+        console.error('Failed to fetch tracks:', err);
         if (axios.isAxiosError(err) && err.response?.status === 401) {
-          localStorage.removeItem("access_token");
-          navigate("/");
+          localStorage.removeItem('access_token');
+          navigate('/');
         }
         setTracks([]);
       } finally {

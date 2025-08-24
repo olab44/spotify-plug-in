@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException
+
 from .schemas import LanguageRecommendationRequest, LanguageRecommendationResponse
 from .service import recommend_languages
 
 router = APIRouter()
+
 
 @router.post("/recommend", response_model=LanguageRecommendationResponse)
 def recommend(request: LanguageRecommendationRequest):

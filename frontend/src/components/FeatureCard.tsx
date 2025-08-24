@@ -1,7 +1,6 @@
-// src/components/FeatureCard.tsx
-import React from 'react';
 import styled from '@emotion/styled';
 import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 interface FeatureCardProps {
   icon: LucideIcon;
@@ -31,7 +30,7 @@ const Description = styled.p`
   text-align: center;
 `;
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, description }) => {
+export const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, description }) => {
   return (
     <CardContainer>
       <IconWrapper>
@@ -42,5 +41,3 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, descriptio
     </CardContainer>
   );
 };
-
-export default FeatureCard;
