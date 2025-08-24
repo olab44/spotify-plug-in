@@ -1,17 +1,21 @@
 import requests
 from src.config.constants import SPOTIFY_API_BASE_URL
-from src.config.tokens import TOKENS
 
 
 def get_top_artists(access_token: str, time_range: str = "medium_term", limit: int = 50):
-    token = TOKENS.get(access_token)
-    if not token:
+    if not access_token:
         return None
+
     headers = {"Authorization": f"Bearer {access_token}"}
     params = {"time_range": time_range, "limit": limit}
-    response = requests.get(f"{SPOTIFY_API_BASE_URL}/me/top/artists", headers=headers, params=params)
-    response.raise_for_status()
-    return response.json()["items"]
+
+    try:
+        response = requests.get(f"{SPOTIFY_API_BASE_URL}/me/top/artists", headers=headers, params=params)
+        response.raise_for_status()
+        return response.json()["items"]
+    except requests.exceptions.HTTPError as e:
+        print(f"Error fetching top artists: {e}")
+        return None
 
 
 def get_top_artists_short_term(access_token: str):
