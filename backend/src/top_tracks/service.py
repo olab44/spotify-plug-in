@@ -1,13 +1,40 @@
+from typing import Optional
+
 import requests
 from src.config.constants import SPOTIFY_API_BASE_URL
 
+TIME_RANGES = {
+    "short-term": "short_term",
+    "medium-term": "medium_term",
+    "long-term": "long_term",
+}
 
-def get_top_tracks(access_token: str, time_range: str = "medium_term", limit: int = 50):
+
+def get_top_tracks(
+    access_token: str, time_range: str = "medium-term", limit: int = 50
+) -> Optional[list]:
+    """
+    Get user's top tracks for a given time range.
+
+    Args:
+        access_token: Spotify access token
+        time_range: Time range for top tracks (short-term, medium-term, or long-term)
+        limit: Number of tracks to return (max 50)
+
+    Returns:
+        List of track objects or None if request fails
+    """
     if not access_token:
         return None
 
+    if time_range not in TIME_RANGES:
+        raise ValueError(
+            f"Invalid time range: {time_range}. Must be one of {list(TIME_RANGES.keys())}"
+        )
+
+    spotify_time_range = TIME_RANGES[time_range]
     headers = {"Authorization": f"Bearer {access_token}"}
-    params = {"time_range": time_range, "limit": limit}
+    params = {"time_range": spotify_time_range, "limit": limit}
 
     try:
         response = requests.get(
@@ -18,15 +45,3 @@ def get_top_tracks(access_token: str, time_range: str = "medium_term", limit: in
     except requests.exceptions.HTTPError as e:
         print(f"Error fetching top tracks: {e}")
         return None
-
-
-def get_top_tracks_short_term(access_token: str):
-    return get_top_tracks(access_token, time_range="short_term")
-
-
-def get_top_tracks_medium_term(access_token: str):
-    return get_top_tracks(access_token, time_range="medium_term")
-
-
-def get_top_tracks_long_term(access_token: str):
-    return get_top_tracks(access_token, time_range="long_term")

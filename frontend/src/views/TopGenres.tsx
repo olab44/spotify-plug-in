@@ -22,7 +22,7 @@ export const TopGenres: React.FC = () => {
     const uniqueArtists = Array.from(
       new Set(artists.filter((artist) => artist.genres.includes(genre))),
     );
-    return uniqueArtists.slice(0, 4).map((artist) => ({
+    return uniqueArtists.slice(0, 5).map((artist) => ({
       id: artist.id,
       url: artist.images[0]?.url || '',
       name: artist.name,

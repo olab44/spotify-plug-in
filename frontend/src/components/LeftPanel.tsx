@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { label: 'Top Tracks', path: '/top-tracks' },
   { label: 'Top Genres', path: '/top-genres' },
   { label: 'Top Artists', path: '/top-artists' },
-  { label: 'Playlists', path: '/dynamic-playlists' },
+  { label: 'Playlists', path: '/playlists' },
   { label: 'Language Recommendation', path: '/language-recommendation' },
 ];
 

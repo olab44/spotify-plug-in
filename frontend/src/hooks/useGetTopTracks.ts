@@ -1,35 +1,37 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useTracksApi } from './api';
+import { useAuth } from './useAuth';
+
+interface Track {
+  id: string;
+  name: string;
+  artists: { name: string }[];
+  album: {
+    name: string;
+    images: { url: string; height: number; width: number }[];
+  };
+  uri: string;
+}
 
 export const useTopTracks = (period: string) => {
-  const [tracks, setTracks] = useState<any[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+  const tracksApi = useTracksApi();
 
   useEffect(() => {
     const fetchTracks = async () => {
-      const accessToken = localStorage.getItem('access_token');
-
-      if (!accessToken) {
-        navigate('/');
-        return;
-      }
+      if (!isAuthenticated) return;
 
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:8000/top-tracks/${period}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await tracksApi.get(`/${period}`);
         setTracks(response.data);
+        setError(null);
       } catch (err) {
         console.error('Failed to fetch tracks:', err);
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          navigate('/');
-        }
+        setError('Failed to fetch top tracks');
         setTracks([]);
       } finally {
         setLoading(false);
@@ -37,7 +39,7 @@ export const useTopTracks = (period: string) => {
     };
 
     fetchTracks();
-  }, [period, navigate]);
+  }, [period, isAuthenticated, tracksApi]);
 
-  return { tracks, loading };
+  return { tracks, loading, error };
 };

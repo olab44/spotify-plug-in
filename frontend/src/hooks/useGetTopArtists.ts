@@ -1,35 +1,34 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { useArtistsApi } from './api';
+import { useAuth } from './useAuth';
+
+interface Artist {
+  id: string;
+  name: string;
+  genres: string[];
+  images: { url: string; height: number; width: number }[];
+  uri: string;
+}
 
 export const useTopArtists = (period: string) => {
-  const [artists, setArtists] = useState<any[]>([]);
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+  const artistsApi = useArtistsApi();
 
   useEffect(() => {
     const fetchArtists = async () => {
-      const accessToken = localStorage.getItem("access_token");
-
-      if (!accessToken) {
-        navigate("/");
-        return;
-      }
+      if (!isAuthenticated) return;
 
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:8000/top-artists/${period}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await artistsApi.get(`/${period}`);
         setArtists(response.data);
+        setError(null);
       } catch (err) {
-        console.error("Failed to fetch artists:", err);
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
-          localStorage.removeItem("access_token");
-          navigate("/");
-        }
+        console.error('Failed to fetch artists:', err);
+        setError('Failed to fetch top artists');
         setArtists([]);
       } finally {
         setLoading(false);
@@ -37,7 +36,7 @@ export const useTopArtists = (period: string) => {
     };
 
     fetchArtists();
-  }, [period, navigate]);
+  }, [period, isAuthenticated, artistsApi]);
 
-  return { artists, loading };
+  return { artists, loading, error };
 };
