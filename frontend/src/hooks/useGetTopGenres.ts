@@ -6,7 +6,7 @@ interface ArtistImage {
   url: string;
 }
 
-interface Artist {
+interface GenreArtist {
   id: string;
   name: string;
   genres: string[];
@@ -23,7 +23,7 @@ interface GenreItem {
 
 export const useGetTopGenres = (period: string) => {
   const [genres, setGenres] = useState<GenreItem[]>([]);
-  const [artists, setArtists] = useState<Artist[]>([]);
+  const [artists, setArtists] = useState<GenreArtist[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();

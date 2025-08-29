@@ -157,3 +157,45 @@ def get_playlist_data(access_token: str, playlist_id: str):
     stats["topGenres"] = dict(genre_counts)
 
     return {"tracks": tracks, "stats": stats}
+
+
+def remove_duplicate_tracks(access_token: str, playlist_id: str):
+    """Removes all duplicate tracks from a playlist."""
+    if not access_token:
+        return None
+
+    tracks = get_playlist_tracks(access_token, playlist_id)
+    if not tracks:
+        return None
+
+    track_counts = defaultdict(list)
+    for track in tracks:
+        track_counts[track["id"]].append(track)
+
+    track_ids_to_remove = [
+        track_id for track_id, instances in track_counts.items() if len(instances) > 1
+    ]
+
+    if not track_ids_to_remove:
+        return True
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+
+    batch_size = 100
+    for i in range(0, len(track_ids_to_remove), batch_size):
+        batch = track_ids_to_remove[i : i + batch_size]
+        payload = {
+            "tracks": [{"uri": f"spotify:track:{track_id}"} for track_id in batch]
+        }
+        url = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
+        try:
+            response = requests.delete(url, headers=headers, json=payload)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"Error removing tracks from playlist: {e}")
+            return False
+
+    return True
