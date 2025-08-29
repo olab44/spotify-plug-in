@@ -1,52 +1,56 @@
 from collections import Counter
+from typing import Dict, List, Optional
 
 import requests
 from src.top_artists.service import get_top_artists as get_raw_top_artists
 
+TIME_RANGES = {
+    "short-term": "short_term",
+    "medium-term": "medium_term",
+    "long-term": "long_term",
+}
 
-def get_top_genres(access_token: str, time_range: str = "medium_term", limit: int = 50):
+
+def get_top_genres(
+    access_token: str, time_range: str = "medium-term", limit: int = 50
+) -> Optional[List[Dict[str, int]]]:
     """
-    Fetches top artists for a given time range and aggregates their genres
-    to determine the most frequently occurring genres.
-
-    Args:
-        access_token (str): The Spotify access token for the user.
-        time_range (str): The time range for top artists (short_term, medium_term, long_term).
-        limit (int): The maximum number of top artists to fetch to derive genres from.
-                     (Note: More artists will provide a broader genre analysis).
-
-    Returns:
-        List[Dict[str, Any]] | None: A list of dictionaries, where each dictionary
-                                     contains 'genre' and 'count', sorted by count
-                                     in descending order. Returns None if fetching
-                                     artists fails or no genres are found.
+    Get user's top genres by aggregating genres from their top artists.
     """
     if not access_token:
         return None
 
+    if time_range not in TIME_RANGES:
+        raise ValueError(
+            f"Invalid time range: {time_range}. Must be one of {list(TIME_RANGES.keys())}"
+        )
+
     try:
-        artists = get_raw_top_artists(access_token, time_range=time_range, limit=limit)
+        spotify_time_range = TIME_RANGES[time_range]
+        artists = get_raw_top_artists(
+            access_token, time_range=spotify_time_range, limit=limit
+        )
 
         if not artists:
             return None
 
-        all_genres = []
-        for artist in artists:
-            if "genres" in artist and isinstance(artist["genres"], list):
-                all_genres.extend(artist["genres"])
+        all_genres = [
+            genre
+            for artist in artists
+            if "genres" in artist and isinstance(artist["genres"], list)
+            for genre in artist["genres"]
+        ]
 
         if not all_genres:
             return None
 
         genre_counts = Counter(all_genres)
+        sorted_genres = [
+            {"genre": genre, "count": count}
+            for genre, count in genre_counts.most_common(10)
+        ]
 
-        sorted_genres = sorted(
-            [{"genre": genre, "count": count} for genre, count in genre_counts.items()],
-            key=lambda x: x["count"],
-            reverse=True,
-        )
-
-        return sorted_genres[:10]
+        return sorted_genres
 
     except requests.exceptions.HTTPError as e:
         print(f"Error fetching top artists for genre aggregation: {e}")
@@ -54,18 +58,3 @@ def get_top_genres(access_token: str, time_range: str = "medium_term", limit: in
     except Exception as e:
         print(f"An unexpected error occurred in get_top_genres: {e}")
         return None
-
-
-def get_top_genres_short_term(access_token: str):
-    """Gets top genres for the short term."""
-    return get_top_genres(access_token, time_range="short_term")
-
-
-def get_top_genres_medium_term(access_token: str):
-    """Gets top genres for the medium term."""
-    return get_top_genres(access_token, time_range="medium_term")
-
-
-def get_top_genres_long_term(access_token: str):
-    """Gets top genres for the long term."""
-    return get_top_genres(access_token, time_range="long_term")

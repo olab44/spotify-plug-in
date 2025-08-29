@@ -1,4 +1,5 @@
 import { Title } from '@/components/StyledComponents';
+import { Button } from '@/components/ui/button';
 import styled from '@emotion/styled';
 import React from 'react';
 
@@ -16,9 +17,10 @@ interface PlaylistStatsProps {
     duplicateTracks: { name: string; count: number }[];
     topGenres: { [genre: string]: number };
   };
+  onRemoveDuplicates: () => void;
 }
 
-export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats }) => {
+export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDuplicates }) => {
   const sortedGenres = Object.entries(stats.topGenres).sort(([, a], [, b]) => b - a);
   const genresToDisplay = sortedGenres.slice(0, 5);
   const otherGenresCount = sortedGenres.slice(5).reduce((sum, [, count]) => sum + count, 0);
@@ -147,6 +149,7 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats }) => {
                 </li>
               ))}
             </DuplicatesList>
+            <Button onClick={onRemoveDuplicates}>Remove Duplicates</Button>
           </StatItem>
         )}
       </Section>
