@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.login.service import get_current_user
 
-from .service import get_playlist_tracks, get_user_playlists
+from .service import get_playlist_data, get_user_playlists
 
 router = APIRouter()
 
@@ -25,11 +25,10 @@ def get_playlist(playlist_id: str, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
-        tracks = get_playlist_tracks(access_token, playlist_id)
-        if tracks is None:
+        data = get_playlist_data(access_token, playlist_id)
+        if data is None:
             raise HTTPException(status_code=404, detail="Playlist not found or empty")
-
-        return tracks
+        return data
     except HTTPException as e:
         raise HTTPException(
             status_code=e.status_code,

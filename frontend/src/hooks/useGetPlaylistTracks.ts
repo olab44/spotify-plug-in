@@ -2,20 +2,8 @@ import { useEffect, useState } from 'react';
 import { usePlaylistsApi } from './api';
 import { useAuth } from './useAuth';
 
-interface PlaylistTrack {
-  id: string;
-  name: string;
-  artists: { name: string }[];
-  album: {
-    name: string;
-    images: { url: string; height: number; width: number }[];
-  };
-  duration_ms: number;
-  uri: string;
-}
-
 export const useGetPlaylistTracks = (playlistId: string | undefined) => {
-  const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
+  const [data, setData] = useState<{ tracks: any[]; stats: any } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
@@ -28,12 +16,12 @@ export const useGetPlaylistTracks = (playlistId: string | undefined) => {
       setLoading(true);
       try {
         const response = await playlistsApi.get(`/${playlistId}`);
-        setTracks(response.data);
+        setData(response.data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch tracks:', err);
-        setError('Failed to load playlist tracks. Please try again.');
-        setTracks([]);
+        console.error('Failed to fetch playlist data:', err);
+        setError('Failed to load playlist data. Please try again.');
+        setData(null);
       } finally {
         setLoading(false);
       }
@@ -42,5 +30,5 @@ export const useGetPlaylistTracks = (playlistId: string | undefined) => {
     fetchTracks();
   }, [playlistId, isAuthenticated, playlistsApi]);
 
-  return { tracks, loading, error };
+  return { data, loading, error };
 };

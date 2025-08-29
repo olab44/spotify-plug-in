@@ -5,10 +5,11 @@ import { TopStatsRow } from '@/components/TopStatsRow';
 import { useGetPlaylistTracks } from '@/hooks/useGetPlaylistTracks';
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { PlaylistStats } from './PlaylistStats';
 
 export const PlaylistDetails: React.FC = () => {
   const { playlistId } = useParams<{ playlistId: string }>();
-  const { tracks, loading, error } = useGetPlaylistTracks(playlistId);
+  const { data, loading, error } = useGetPlaylistTracks(playlistId);
 
   return (
     <LeftPanelProvider>
@@ -16,13 +17,13 @@ export const PlaylistDetails: React.FC = () => {
       <PageContainer>
         {loading && <Title>Loading tracks...</Title>}
         {error && <Title>Error: {error}</Title>}
-        {!loading && !error && (
+        {!loading && !error && data && (
           <>
+            <Title>Playlist Stats</Title>
+            <PlaylistStats stats={data.stats} />
             <Title>Playlist Tracks</Title>
             <TopStatsList
-              loading={loading}
-              error={error}
-              items={tracks}
+              items={data.tracks}
               noDataMessage="No tracks found in this playlist."
               renderRow={(track, idx) => (
                 <a
@@ -41,6 +42,7 @@ export const PlaylistDetails: React.FC = () => {
                   />
                 </a>
               )}
+              loading={false}
             />
           </>
         )}
