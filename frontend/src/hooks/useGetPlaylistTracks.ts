@@ -1,39 +1,37 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { usePlaylistsApi } from './api';
+import { useAuth } from './useAuth';
+
+interface PlaylistTrack {
+  id: string;
+  name: string;
+  artists: { name: string }[];
+  album: {
+    name: string;
+    images: { url: string; height: number; width: number }[];
+  };
+  duration_ms: number;
+  uri: string;
+}
 
 export const useGetPlaylistTracks = (playlistId: string | undefined) => {
-  const [tracks, setTracks] = useState<any[]>([]);
+  const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const playlistsApi = usePlaylistsApi();
 
   useEffect(() => {
-    if (!playlistId) return;
+    if (!playlistId || !isAuthenticated) return;
 
     const fetchTracks = async () => {
-      const accessToken = localStorage.getItem('access_token');
-
-      if (!accessToken) {
-        navigate('/');
-        return;
-      }
-
       setLoading(true);
-      setError(null);
       try {
-        const response = await axios.get(`http://localhost:8000/playlists/${playlistId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await playlistsApi.get(`/${playlistId}`);
         setTracks(response.data);
+        setError(null);
       } catch (err) {
         console.error('Failed to fetch tracks:', err);
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          navigate('/');
-        }
         setError('Failed to load playlist tracks. Please try again.');
         setTracks([]);
       } finally {
@@ -42,7 +40,7 @@ export const useGetPlaylistTracks = (playlistId: string | undefined) => {
     };
 
     fetchTracks();
-  }, [playlistId, navigate]);
+  }, [playlistId, isAuthenticated, playlistsApi]);
 
   return { tracks, loading, error };
 };
