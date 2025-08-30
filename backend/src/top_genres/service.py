@@ -26,10 +26,7 @@ def get_top_genres(
         )
 
     try:
-        spotify_time_range = TIME_RANGES[time_range]
-        artists = get_raw_top_artists(
-            access_token, time_range=spotify_time_range, limit=limit
-        )
+        artists = get_raw_top_artists(access_token, time_range=time_range, limit=limit)
 
         if not artists:
             return None

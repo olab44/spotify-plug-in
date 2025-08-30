@@ -2,15 +2,35 @@ import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { PageContainer, Title } from '@/components/StyledComponents';
 import { TopStatsList } from '@/components/TopStatsList';
 import { TopStatsRow } from '@/components/TopStatsRow';
+import { usePlaylistsApi } from '@/hooks/api';
 import { useGetPlaylistTracks } from '@/hooks/useGetPlaylistTracks';
 import styled from '@emotion/styled';
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { PlaylistStats } from './PlaylistStats';
 
 export const PlaylistDetails: React.FC = () => {
   const { playlistId } = useParams<{ playlistId: string }>();
-  const { data, loading, error } = useGetPlaylistTracks(playlistId);
+  const { data, loading, error, refetch } = useGetPlaylistTracks(playlistId);
+  const playlistsApi = usePlaylistsApi();
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [removalError, setRemovalError] = useState<string | null>(null);
+
+  const handleRemoveDuplicates = async () => {
+    if (!playlistId || isRemoving) return;
+
+    setIsRemoving(true);
+    setRemovalError(null);
+    try {
+      await playlistsApi.post(`/${playlistId}/remove-duplicates`);
+      await refetch();
+    } catch (err) {
+      console.error('Failed to remove duplicates:', err);
+      setRemovalError('Failed to remove duplicates. Please try again.');
+    } finally {
+      setIsRemoving(false);
+    }
+  };
 
   return (
     <LeftPanelProvider>
@@ -22,12 +42,20 @@ export const PlaylistDetails: React.FC = () => {
           <ContentGrid>
             <StatsPanel>
               <Title>Playlist Stats</Title>
-              <PlaylistStats stats={data.stats} />
+              {data.stats ? (
+                <PlaylistStats
+                  stats={data.stats}
+                  onRemoveDuplicates={handleRemoveDuplicates}
+                  isRemoving={isRemoving}
+                />
+              ) : (
+                <p>No stats available for this playlist.</p>
+              )}
             </StatsPanel>
             <TracksPanel>
               <Title>Playlist Tracks</Title>
               <TopStatsList
-                items={data.tracks}
+                items={data.tracks.map((item: any) => item.track)}
                 noDataMessage="No tracks found in this playlist."
                 renderRow={(track, idx) => (
                   <a
@@ -48,6 +76,7 @@ export const PlaylistDetails: React.FC = () => {
                 )}
                 loading={false}
               />
+              {removalError && <ErrorMessage>{removalError}</ErrorMessage>}
             </TracksPanel>
           </ContentGrid>
         )}
@@ -72,4 +101,10 @@ const TracksPanel = styled.div`
   padding: 16px;
   background-color: #121212;
   border-radius: 8px;
+`;
+
+const ErrorMessage = styled.p`
+  color: #e57373;
+  text-align: center;
+  margin-top: 16px;
 `;

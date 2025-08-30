@@ -13,4 +13,4 @@ SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 SECRET_KEY = os.getenv("SECRET_KEY", "secret")
 
-DEFAULT_SCOPES = "user-read-private user-read-email user-library-read playlist-read-private user-top-read"
+DEFAULT_SCOPES = "user-read-private user-read-email user-library-read playlist-read-private user-top-read user-read-playback-position playlist-modify-private playlist-modify-public"

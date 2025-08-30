@@ -7,25 +7,51 @@ interface PlaylistStatsProps {
   stats: {
     totalTracks: number;
     totalDuration: string;
-    avgReleaseYear: number;
-    releaseYearHistogram: { [decade: string]: number };
-    oldestTrack: { name: string; year: number };
-    newestTrack: { name: string; year: number };
     avgPopularity: number;
     medianPopularity: number;
     explicitContentRatio: number;
     duplicateTracks: { name: string; count: number }[];
-    topGenres: { [genre: string]: number };
+    releaseYearStats: {
+      avgReleaseYear: number;
+      oldestTrack: { name: string; year: number };
+      newestTrack: { name: string; year: number };
+      histogram: { [decade: string]: number };
+    };
+    genres: {
+      topGenres: { [genre: string]: number };
+      uniqueGenresCount: number;
+    };
+    audioFeatures: {
+      avgValence: number;
+      avgEnergy: number;
+      avgDanceability: number;
+      avgTempo: number;
+      acousticness: number;
+      instrumentalness: number;
+      modeDistribution: { [mode: string]: number };
+    };
+    freshnessScore: number;
+    diversityScore: number;
+    hitsVsHiddenGems: {
+      hitsRatio: number;
+      gemsRatio: number;
+    };
+    tasteSimilarity: number;
   };
   onRemoveDuplicates: () => void;
+  isRemoving: boolean;
 }
 
-export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDuplicates }) => {
-  const sortedGenres = Object.entries(stats.topGenres).sort(([, a], [, b]) => b - a);
+export const PlaylistStats: React.FC<PlaylistStatsProps> = ({
+  stats,
+  onRemoveDuplicates,
+  isRemoving,
+}) => {
+  const sortedGenres = Object.entries(stats.genres.topGenres).sort(([, a], [, b]) => b - a);
   const genresToDisplay = sortedGenres.slice(0, 5);
   const otherGenresCount = sortedGenres.slice(5).reduce((sum, [, count]) => sum + count, 0);
   const totalGenresCount = sortedGenres.reduce((sum, [, count]) => sum + count, 0);
-  const decadeData = Object.entries(stats.releaseYearHistogram).sort(
+  const decadeData = Object.entries(stats.releaseYearStats.histogram).sort(
     ([a], [b]) => parseInt(a) - parseInt(b),
   );
   const maxCount = decadeData.reduce((max, [, count]) => Math.max(max, count), 0);
@@ -60,12 +86,42 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
         </StatCard>
         <StatCard>
           <StatLabel>Average Release Year</StatLabel>
-          <StatValue>{stats.avgReleaseYear.toFixed(0)}</StatValue>
+          <StatValue>{stats.releaseYearStats.avgReleaseYear.toFixed(0)}</StatValue>
         </StatCard>
       </StatsGrid>
 
       <Section>
-        <SectionTitle>Top Genres</SectionTitle>
+        {/* <SectionTitle>Mood & Danceability</SectionTitle>
+        <InfoText>
+          <BoldText>Energy:</BoldText> {(stats.audioFeatures.avgEnergy * 100).toFixed(0)}%
+        </InfoText>
+        <InfoText>
+          <BoldText>Valence (Happiness):</BoldText>{' '}
+          {(stats.audioFeatures.avgValence * 100).toFixed(0)}%
+        </InfoText>
+        <InfoText>
+          <BoldText>Danceability:</BoldText>{' '}
+          {(stats.audioFeatures.avgDanceability * 100).toFixed(0)}%
+        </InfoText>
+        <InfoText>
+          <BoldText>Acoustic vs. Electronic:</BoldText>{' '}
+          {stats.audioFeatures.acousticness > stats.audioFeatures.instrumentalness
+            ? 'More Acoustic'
+            : 'More Electronic'}
+        </InfoText> */}
+        {/* <InfoText>
+          <BoldText>Average Tempo:</BoldText> {stats.audioFeatures.avgTempo.toFixed(0)} BPM
+        </InfoText> */}
+      </Section>
+
+      <Section>
+        <SectionTitle>Genres & Diversity</SectionTitle>
+        <InfoText>
+          <BoldText>Unique Genres:</BoldText> {stats.genres.uniqueGenresCount}
+        </InfoText>
+        <InfoText>
+          <BoldText>Diversity Score:</BoldText> {stats.diversityScore.toFixed(2)}
+        </InfoText>
         <GenreChartContainer>
           <PieChart viewBox="0 0 100 100">
             {pieChartData.map((data, index) => {
@@ -79,7 +135,6 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
               const y1 = 50 + radius * Math.sin((Math.PI * startAngle) / 180);
               const x2 = 50 + radius * Math.cos((Math.PI * endAngle) / 180);
               const y2 = 50 + radius * Math.sin((Math.PI * endAngle) / 180);
-
               return (
                 <path
                   key={data.genre}
@@ -103,12 +158,13 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
       <Section>
         <SectionTitle>Track Release Years</SectionTitle>
         <InfoText>
-          <BoldText>Oldest:</BoldText> {stats.oldestTrack.name} ({stats.oldestTrack.year})
+          <BoldText>Oldest:</BoldText> {stats.releaseYearStats.oldestTrack.name} (
+          {stats.releaseYearStats.oldestTrack.year})
         </InfoText>
         <InfoText>
-          <BoldText>Newest:</BoldText> {stats.newestTrack.name} ({stats.newestTrack.year})
+          <BoldText>Newest:</BoldText> {stats.releaseYearStats.newestTrack.name} (
+          {stats.releaseYearStats.newestTrack.year})
         </InfoText>
-
         <HistogramContainer>
           <YAxis>
             {yAxisLabels.map((label, index) => (
@@ -118,7 +174,7 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
           <Histogram>
             {decadeData.map(([decade, count]) => (
               <HistogramBar key={decade} height={maxCount > 0 ? (count / maxCount) * 100 : 0}>
-                <BarLabel>{count}</BarLabel> {/* Display the count on top of the bar */}
+                <BarLabel>{count}</BarLabel>
               </HistogramBar>
             ))}
           </Histogram>
@@ -128,6 +184,32 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
             <XAxisLabel key={decade}>{decade}</XAxisLabel>
           ))}
         </XAxis>
+      </Section>
+
+      {/* New section for popularity and similarity stats */}
+      <Section>
+        <SectionTitle>Hits & Popularity</SectionTitle>
+        <InfoText>
+          <BoldText>Freshness Score:</BoldText> {stats.freshnessScore.toFixed(1)}/100
+        </InfoText>
+        <InfoText>
+          <BoldText>Playlist vs. Your Taste:</BoldText> {(stats.tasteSimilarity * 100).toFixed(0)}%
+          similar
+        </InfoText>
+        <InfoText>
+          <BoldText>Hits vs. Hidden Gems:</BoldText>
+        </InfoText>
+        <ProgressBarContainer>
+          <ProgressBar width={stats.hitsVsHiddenGems.hitsRatio * 100} />
+        </ProgressBarContainer>
+        <StatItem>
+          <StatLabel>Hits (Popularity &gt; 70)</StatLabel>
+          <StatValueSmall>{(stats.hitsVsHiddenGems.hitsRatio * 100).toFixed(1)}%</StatValueSmall>
+        </StatItem>
+        <StatItem>
+          <StatLabel>Hidden Gems (Popularity &lt; 30)</StatLabel>
+          <StatValueSmall>{(stats.hitsVsHiddenGems.gemsRatio * 100).toFixed(1)}%</StatValueSmall>
+        </StatItem>
       </Section>
 
       <Section>
@@ -149,7 +231,9 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
                 </li>
               ))}
             </DuplicatesList>
-            <Button onClick={onRemoveDuplicates}>Remove Duplicates</Button>
+            <Button onClick={onRemoveDuplicates} disabled={isRemoving}>
+              {isRemoving ? 'Removing...' : 'Remove Duplicates'}
+            </Button>
           </StatItem>
         )}
       </Section>
@@ -157,6 +241,12 @@ export const PlaylistStats: React.FC<PlaylistStatsProps> = ({ stats, onRemoveDup
   );
 };
 
+const StatValueSmall = styled.p`
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+`;
 const StatsContainer = styled.div`
   display: flex;
   flex-direction: column;
