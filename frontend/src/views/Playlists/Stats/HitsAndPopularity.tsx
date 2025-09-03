@@ -1,12 +1,14 @@
-import styled from '@emotion/styled';
 import {
   BoldText,
   InfoText,
   ProgressBar,
+  ProgressBarContainer,
   Section,
   SectionTitle,
   StatItem,
-} from './StyledComponents';
+  StatLabel,
+  StatValueSmall,
+} from '../StyledComponents';
 
 interface HitsAndPopularityProps {
   freshnessScore: number;
@@ -35,16 +37,17 @@ export const HitsAndPopularity = ({
     </InfoText>
     <StatItem>
       <StatLabel>Hits</StatLabel>
-      <ProgressBar width={hitsVsHiddenGems.hitsRatio * 100} />
+      <ProgressBarContainer>
+        <ProgressBar width={hitsVsHiddenGems.hitsRatio * 100} />
+      </ProgressBarContainer>
       <StatValueSmall>{(hitsVsHiddenGems.hitsRatio * 100).toFixed(1)}%</StatValueSmall>
     </StatItem>
     <StatItem>
       <StatLabel>Hidden Gems</StatLabel>
-      <ProgressBar width={hitsVsHiddenGems.gemsRatio * 100} />
+      <ProgressBarContainer>
+        <ProgressBar width={hitsVsHiddenGems.gemsRatio * 100} />
+      </ProgressBarContainer>
       <StatValueSmall>{(hitsVsHiddenGems.gemsRatio * 100).toFixed(1)}%</StatValueSmall>
     </StatItem>
   </Section>
 );
-
-const StatValueSmall = styled.p`...`;
-const StatLabel = styled.p`...`;

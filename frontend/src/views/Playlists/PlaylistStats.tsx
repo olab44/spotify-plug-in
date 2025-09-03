@@ -1,10 +1,10 @@
 import styled from '@emotion/styled';
 import React from 'react';
 
-import { GenreStats } from './GenreStats';
-import { HitsAndPopularity } from './HitsAndPopularity';
-import { OtherStats } from './OtherStats';
-import { ReleaseYearStats } from './ReleaseYearStats';
+import { GenreStats } from './Stats/GenreStats';
+import { HitsAndPopularity } from './Stats/HitsAndPopularity';
+import { OtherStats } from './Stats/OtherStats';
+import { ReleaseYearStats } from './Stats/ReleaseYearStats';
 import { StatsGrid } from './StatsGrid';
 
 interface PlaylistStatsProps {

@@ -1,16 +1,21 @@
 import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
-import { PageContainer, Title } from '@/components/StyledComponents';
+import { Title } from '@/components/StyledComponents';
 import { TopStatsList } from '@/components/TopStatsList';
 import { TopStatsRow } from '@/components/TopStatsRow';
+import { Button } from '@/components/ui/button';
 import { usePlaylistsApi } from '@/hooks/api';
 import { useGetPlaylistTracks } from '@/hooks/useGetPlaylistTracks';
 import styled from '@emotion/styled';
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PlaylistStats } from './PlaylistStats';
 
 export const PlaylistDetails: React.FC = () => {
   const { playlistId } = useParams<{ playlistId: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const playlistNameFromUrl = searchParams.get('name');
+
   const { data, loading, error, refetch } = useGetPlaylistTracks(playlistId);
   const playlistsApi = usePlaylistsApi();
   const [isRemoving, setIsRemoving] = useState(false);
@@ -32,10 +37,20 @@ export const PlaylistDetails: React.FC = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate('/playlists');
+  };
+
   return (
     <LeftPanelProvider>
       <LeftPanel />
-      <PageContainer>
+      <StatsContainer>
+        <Header>
+          <Button onClick={handleGoBack}>← Go Back to Playlists</Button>
+          <Title>
+            {playlistNameFromUrl || (typeof data?.name === 'string' ? data.name : 'Playlist')}
+          </Title>
+        </Header>
         {loading && <Title>Loading tracks...</Title>}
         {error && <Title>Error: {error}</Title>}
         {!loading && !error && data && (
@@ -80,7 +95,7 @@ export const PlaylistDetails: React.FC = () => {
             </TracksPanel>
           </ContentGrid>
         )}
-      </PageContainer>
+      </StatsContainer>
     </LeftPanelProvider>
   );
 };
@@ -107,4 +122,20 @@ const ErrorMessage = styled.p`
   color: #e57373;
   text-align: center;
   margin-top: 16px;
+`;
+
+const StatsContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb; /* Light gray background */
+  min-height: 100vh;
+  color: #1a202c;
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
 `;

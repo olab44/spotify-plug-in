@@ -16,17 +16,29 @@ def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
         tracks = get_playlist_tracks(access_token, playlist_id)
         if not tracks:
             return None
-        all_artist_ids = []
-        for track in tracks:
-            for artist in track.get("artists", []):
-                if artist.get("id"):
-                    all_artist_ids.append(artist["id"])
-        all_artist_ids = list(set(all_artist_ids))
 
-        if all_artist_ids:
-            genres_data = get_genres_for_artists(access_token, all_artist_ids)
-        else:
-            genres_data = {}
+        artist_ids = list(
+            set(
+                artist["id"]
+                for track in tracks
+                for artist in track.get("artists", [])
+                if artist.get("id")
+            )
+        )
+
+        artist_genres_map = get_genres_for_artists(access_token, artist_ids)
+
+        song_genres = []
+        for track in tracks:
+            primary_artist = (
+                track.get("artists", [])[0] if track.get("artists") else None
+            )
+
+            if primary_artist and primary_artist["id"] in artist_genres_map:
+                genres_for_artist = artist_genres_map[primary_artist["id"]]
+                if genres_for_artist:
+                    top_genre = Counter(genres_for_artist).most_common(1)[0][0]
+                    song_genres.append(top_genre)
 
         stats = {
             "totalTracks": len(tracks),
@@ -36,9 +48,9 @@ def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
             "explicitContentRatio": calculate_explicit_ratio(tracks),
             "duplicateTracks": find_duplicate_tracks(tracks),
             "releaseYearStats": calculate_release_year_stats(tracks),
-            "genres": calculate_genre_stats(genres_data),
+            "genres": calculate_genre_stats(song_genres),
             "freshnessScore": calculate_freshness_score(tracks),
-            "diversityScore": calculate_diversity_score(genres_data),
+            "diversityScore": calculate_diversity_score(song_genres),
             "hitsVsHiddenGems": calculate_hits_vs_gems(tracks),
         }
 
@@ -47,8 +59,8 @@ def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
             stats["tasteSimilarity"] = calculate_taste_similarity(
                 tracks, user_top_tracks
             )
-
         return stats
+
     except Exception as e:
         print(f"Error in get_playlist_stats: {e}")
         return None
@@ -136,8 +148,7 @@ def calculate_release_year_stats(tracks: List[Dict]) -> Dict:
 
     year_histogram = defaultdict(int)
     for year in release_years:
-        decade = f"{year // 10 * 10}s"
-        year_histogram[decade] += 1
+        year_histogram[str(year)] += 1
 
     def normalize_for_sort(track):
         parsed = parse_release_date(track.get("album", {}).get("release_date"))
@@ -258,12 +269,12 @@ def calculate_taste_similarity(
 
 
 def get_genres_for_artists(access_token: str, artist_ids: list):
-    """Fetches genres for a list of artist IDs."""
+    """Fetches genres for a list of artist IDs and returns a dictionary."""
     if not access_token or not artist_ids:
-        return []
+        return {}
 
     headers = {"Authorization": f"Bearer {access_token}"}
-    genres = set()
+    artist_genres = defaultdict(list)
 
     for i in range(0, len(artist_ids), 50):
         batch_ids = artist_ids[i : i + 50]
@@ -274,30 +285,9 @@ def get_genres_for_artists(access_token: str, artist_ids: list):
             response.raise_for_status()
             data = response.json()
             for artist in data.get("artists", []):
-                genres.update(artist.get("genres", []))
+                artist_genres[artist["id"]].extend(artist.get("genres", []))
         except requests.RequestException as e:
             print(f"Error fetching artist data: {e}")
-            return []
+            return {}
 
-    return list(genres)
-
-
-def get_audio_features(access_token: str, track_ids: List[str]) -> List[Dict]:
-    if not track_ids:
-        return []
-    features = []
-    headers = {"Authorization": f"Bearer {access_token}"}
-    for i in range(0, len(track_ids), 100):
-        batch_ids = track_ids[i : i + 100]
-        ids_param = ",".join(batch_ids)
-        try:
-            response = requests.get(
-                f"{SPOTIFY_API_BASE_URL}/audio-features?ids={ids_param}",
-                headers=headers,
-            )
-            response.raise_for_status()
-            features.extend(response.json()["audio_features"])
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching audio features for batch {i}: {e}")
-            continue
-    return [f for f in features if f is not None]
+    return dict(artist_genres)

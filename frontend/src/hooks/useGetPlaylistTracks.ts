@@ -3,7 +3,11 @@ import { usePlaylistsApi } from './api';
 import { useAuth } from './useAuth';
 
 export const useGetPlaylistTracks = (playlistId: string | undefined) => {
-  const [data, setData] = useState<{ tracks: any[]; stats: any } | null>(null);
+  const [data, setData] = useState<{
+    name: { tracks: any[]; stats: any };
+    tracks: any[];
+    stats: any;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();

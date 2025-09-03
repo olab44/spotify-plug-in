@@ -1,6 +1,15 @@
 import { Button } from '@/components/ui/button';
-import styled from '@emotion/styled';
-import { ProgressBar, Section, SectionTitle, StatItem } from './StyledComponents';
+import {
+  DuplicatesList,
+  InfoText,
+  ProgressBar,
+  ProgressBarContainer,
+  Section,
+  SectionTitle,
+  StatItem,
+  StatLabel,
+  StatValueSmall,
+} from '../StyledComponents';
 
 interface OtherStatsProps {
   explicitContentRatio: number;
@@ -19,10 +28,12 @@ export const OtherStats = ({
     <SectionTitle>Other Stats</SectionTitle>
     <StatItem>
       <StatLabel>Explicit Content</StatLabel>
-      <ProgressBar width={explicitContentRatio * 100} />
+      <ProgressBarContainer>
+        <ProgressBar width={explicitContentRatio * 100} />
+      </ProgressBarContainer>
       <StatValueSmall>{(explicitContentRatio * 100).toFixed(1)}%</StatValueSmall>
     </StatItem>
-    {duplicateTracks.length > 0 && (
+    {duplicateTracks.length > 0 ? (
       <StatItem>
         <StatLabel>Duplicates</StatLabel>
         <DuplicatesList>
@@ -36,10 +47,8 @@ export const OtherStats = ({
           {isRemoving ? 'Removing...' : 'Remove Duplicates'}
         </Button>
       </StatItem>
+    ) : (
+      <InfoText>No duplicate tracks found. ✅</InfoText>
     )}
   </Section>
 );
-
-const StatLabel = styled.p`...`;
-const StatValueSmall = styled.p`...`;
-const DuplicatesList = styled.ul`...`;

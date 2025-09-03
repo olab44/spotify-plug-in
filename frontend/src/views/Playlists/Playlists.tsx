@@ -3,7 +3,7 @@ import { PageContainer, Title } from '@/components/StyledComponents';
 import { useGetPlaylists } from '@/hooks/useGetPlaylists';
 import styled from '@emotion/styled';
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { createSearchParams, Link } from 'react-router-dom';
 
 export const Playlists: React.FC = () => {
   const { playlists, loading, error } = useGetPlaylists();
@@ -41,7 +41,14 @@ export const Playlists: React.FC = () => {
           {playlists.length > 0 ? (
             playlists.map((playlist) => (
               <PlaylistCard key={playlist.id}>
-                <StyledLink to={`/playlists/${playlist.id}`} state={{ playlist }}>
+                <StyledLink
+                  to={{
+                    pathname: `/playlists/${playlist.id}`,
+                    search: createSearchParams({
+                      name: playlist.name,
+                    }).toString(),
+                  }}
+                >
                   {playlist.images?.[0]?.url ? (
                     <PlaylistImage src={playlist.images[0].url} alt={playlist.name} />
                   ) : (
