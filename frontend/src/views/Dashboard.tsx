@@ -31,6 +31,18 @@ const DashboardContent: React.FC<{ user: User | null }> = ({ user }) => {
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Genres</span>
             </StyledLink>
+            <StyledLink to="/playlists">
+              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
+              <span>Playlists Stats</span>
+            </StyledLink>
+            <StyledLink to="/language-stats">
+              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
+              <span>Language Stats</span>
+            </StyledLink>
+            <StyledLink to="/recommendations">
+              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
+              <span>Recommendations</span>
+            </StyledLink>
           </DashboardGrid>
           <LogoutButton />
         </>
@@ -90,7 +102,7 @@ const DashboardGrid = styled.div`
   margin: 2rem 0;
 
   @media (min-width: 768px) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
 

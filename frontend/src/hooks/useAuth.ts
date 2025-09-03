@@ -1,4 +1,3 @@
-// in src/hooks/useAuth.ts
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
