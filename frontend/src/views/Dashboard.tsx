@@ -35,6 +35,14 @@ const DashboardContent: React.FC<{ user: User | null }> = ({ user }) => {
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Playlists Stats</span>
             </StyledLink>
+            <StyledLink to="/language-stats">
+              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
+              <span>Language Stats</span>
+            </StyledLink>
+            <StyledLink to="/recommendations">
+              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
+              <span>Recommendations</span>
+            </StyledLink>
           </DashboardGrid>
           <LogoutButton />
         </>

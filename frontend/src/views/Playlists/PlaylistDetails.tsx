@@ -51,50 +51,49 @@ export const PlaylistDetails: React.FC = () => {
             {playlistNameFromUrl || (typeof data?.name === 'string' ? data.name : 'Playlist')}
           </Title>
         </Header>
-        {loading && <Title>Loading tracks...</Title>}
-        {error && <Title>Error: {error}</Title>}
-        {!loading && !error && data && (
-          <ContentGrid>
-            <StatsPanel>
-              <Title>Playlist Stats</Title>
-              {data.stats ? (
-                <PlaylistStats
-                  stats={data.stats}
-                  onRemoveDuplicates={handleRemoveDuplicates}
-                  isRemoving={isRemoving}
-                />
-              ) : (
-                <p>No stats available for this playlist.</p>
-              )}
-            </StatsPanel>
-            <TracksPanel>
-              <Title>Playlist Tracks</Title>
-              <TopStatsList
-                items={data.tracks.map((item: any) => item.track)}
-                noDataMessage="No tracks found in this playlist."
-                renderRow={(track, idx) => (
-                  <a
-                    key={track.id}
-                    href={track.external_urls.spotify}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    <TopStatsRow
-                      rank={idx + 1}
-                      imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
-                      primaryText={track.name}
-                      secondaryText={track.artists.map((a: { name: string }) => a.name).join(', ')}
-                      tertiaryText={track.album.name}
-                    />
-                  </a>
-                )}
-                loading={false}
+
+        <ContentGrid>
+          <StatsPanel>
+            <Title>Playlist Stats</Title>
+            {data?.stats ? (
+              <PlaylistStats
+                stats={data.stats}
+                onRemoveDuplicates={handleRemoveDuplicates}
+                isRemoving={isRemoving}
               />
-              {removalError && <ErrorMessage>{removalError}</ErrorMessage>}
-            </TracksPanel>
-          </ContentGrid>
-        )}
+            ) : (
+              <p>No stats available for this playlist.</p>
+            )}
+          </StatsPanel>
+
+          <TracksPanel>
+            <Title>Playlist Tracks</Title>
+            <TopStatsList
+              items={data?.tracks?.map((item: any) => item.track) || []}
+              noDataMessage="No tracks found in this playlist."
+              loading={loading}
+              error={error}
+              renderRow={(track, idx) => (
+                <a
+                  key={track.id}
+                  href={track.external_urls.spotify}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <TopStatsRow
+                    rank={idx + 1}
+                    imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
+                    primaryText={track.name}
+                    secondaryText={track.artists.map((a: { name: string }) => a.name).join(', ')}
+                    tertiaryText={track.album.name}
+                  />
+                </a>
+              )}
+            />
+            {removalError && <ErrorMessage>{removalError}</ErrorMessage>}
+          </TracksPanel>
+        </ContentGrid>
       </StatsContainer>
     </LeftPanelProvider>
   );
@@ -129,7 +128,7 @@ const StatsContainer = styled.div`
   margin: 0 auto;
   padding: 2rem 1rem;
   font-family: 'Inter', sans-serif;
-  background-color: #f9fafb; /* Light gray background */
+  background-color: #f9fafb;
   min-height: 100vh;
   color: #1a202c;
 `;
@@ -138,4 +137,5 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 24px;
+  position: relative;
 `;
