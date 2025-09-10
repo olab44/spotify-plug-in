@@ -1,4 +1,6 @@
-import { Header } from "./Header";
+import { Box, Container } from '@mui/material';
+import React from 'react';
+import { Header } from './Header';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -6,9 +8,23 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        color: 'text.primary',
+      }}
+    >
       <Header />
-      <main className="container pt-24 pb-16">{children}</main>
-    </div>
+      <Container
+        component="main"
+        sx={{
+          pt: 12,
+          pb: 8,
+        }}
+      >
+        {children}
+      </Container>
+    </Box>
   );
 };

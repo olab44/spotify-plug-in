@@ -1,3 +1,5 @@
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import { Box, Button } from '@mui/material';
 import React from 'react';
 
 export const LoginButton: React.FC = () => {
@@ -6,13 +8,21 @@ export const LoginButton: React.FC = () => {
   };
 
   return (
-    <div className="text-center mt-10">
-      <button
+    <Box sx={{ textAlign: 'center', mt: 10 }}>
+      <Button
+        variant="contained"
+        color="primary"
         onClick={handleLogin}
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
+        size="large"
+        startIcon={<MusicNoteIcon />}
+        sx={{
+          fontSize: '1.125rem',
+          py: 1.5,
+          px: 4,
+        }}
       >
-        🎵 Login with Spotify
-      </button>
-    </div>
+        Login with Spotify
+      </Button>
+    </Box>
   );
 };

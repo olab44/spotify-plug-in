@@ -1,5 +1,5 @@
-import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import React from 'react';
+import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 interface TimeRangeSelectorProps {
   period: string;
@@ -7,11 +7,7 @@ interface TimeRangeSelectorProps {
   periods: { label: string; value: string }[];
 }
 
-const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
-  period,
-  onPeriodChange,
-  periods,
-}) => {
+const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ period, onPeriodChange, periods }) => {
   const handleChange = (_: React.MouseEvent<HTMLElement>, newValue: string | null) => {
     if (newValue) {
       onPeriodChange(newValue);

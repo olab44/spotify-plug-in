@@ -1,45 +1,72 @@
+import MenuIcon from '@mui/icons-material/Menu';
+import { AppBar, Box, Container, IconButton, Toolbar, Typography, useTheme } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export const MenuIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-  <button
-    className="fixed top-4 left-4 z-50 bg-green-600 text-white rounded-full p-3 shadow-lg hover:bg-green-700 transition-all"
+interface MenuButtonProps {
+  onClick: () => void;
+}
+
+export const MenuButton: React.FC<MenuButtonProps> = ({ onClick }) => (
+  <IconButton
     onClick={onClick}
     aria-label="Open menu"
+    sx={{
+      position: 'fixed',
+      top: 16,
+      left: 16,
+      zIndex: (theme) => theme.zIndex.appBar + 1,
+      backgroundColor: 'primary.main',
+      color: 'primary.contrastText',
+      '&:hover': {
+        backgroundColor: 'primary.dark',
+      },
+      boxShadow: 4,
+    }}
   >
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  </button>
+    <MenuIcon />
+  </IconButton>
 );
 
 export const Header = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <h1
-            onClick={() => navigate('/')}
-            className="text-xl font-semibold tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            Soundscape
-          </h1>
-        </div>
-        <div className="flex items-center gap-4"></div>
-      </div>
-    </header>
+    <AppBar
+      position="fixed"
+      sx={{
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
+        backdropFilter: 'blur(10px)',
+        background: (theme) => `${theme.palette.background.default}CC`,
+      }}
+      elevation={0}
+    >
+      <Container maxWidth="lg">
+        <Toolbar disableGutters sx={{ height: 64 }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography
+              variant="h6"
+              component="h1"
+              onClick={() => navigate('/')}
+              sx={{
+                fontWeight: 600,
+                cursor: 'pointer',
+                letterSpacing: '-0.025em',
+                '&:hover': {
+                  opacity: 0.8,
+                },
+                transition: 'opacity 0.2s',
+              }}
+            >
+              Soundscape
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }} />
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 };

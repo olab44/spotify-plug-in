@@ -1,4 +1,4 @@
-import styled from '@emotion/styled';
+import { Avatar, Box, Link, Paper, Stack, styled, Typography, useTheme } from '@mui/material';
 import React from 'react';
 
 interface SmallImageProps {
@@ -19,6 +19,36 @@ interface TopStatsRowProps {
   smallImages?: SmallImageProps[];
 }
 
+const StatsIndex = styled(Box)(({ theme }) => ({
+  fontWeight: 800,
+  fontSize: '1.75rem',
+  minWidth: '3rem',
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+  backgroundColor: theme.palette.action.hover,
+  borderRadius: theme.shape.borderRadius,
+  padding: '0.5rem 0.25rem',
+}));
+
+const StatsImage = styled('img')<{ isCircular: boolean }>(({ theme, isCircular }) => ({
+  width: 72,
+  height: 72,
+  borderRadius: isCircular ? '50%' : theme.shape.borderRadius,
+  objectFit: 'cover',
+  flexShrink: 0,
+  boxShadow: theme.shadows[1],
+}));
+
+const SmallImageWrapper = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginLeft: theme.spacing(1),
+  '& > *:not(:first-of-type)': {
+    marginLeft: theme.spacing(-0.5),
+  },
+}));
+
 export const TopStatsRow: React.FC<TopStatsRowProps> = ({
   rank,
   imageUrl,
@@ -29,144 +59,78 @@ export const TopStatsRow: React.FC<TopStatsRowProps> = ({
   spotifyUrl,
   smallImages,
 }) => {
+  const theme = useTheme();
+
   return (
-    <StatsCard>
+    <Paper
+      elevation={1}
+      sx={{
+        p: 2,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        cursor: 'pointer',
+        transition: theme.transitions.create(['transform', 'box-shadow']),
+        '&:hover': {
+          transform: 'translateY(-5px)',
+          boxShadow: theme.shadows[4],
+        },
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+      }}
+    >
       <StatsIndex>{rank}.</StatsIndex>
       {imageUrl && (
-        <a
-          href={spotifyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-        >
+        <Link href={spotifyUrl} target="_blank" rel="noopener noreferrer" sx={{ flexShrink: 0 }}>
           <StatsImage
             src={imageUrl}
             alt={primaryText}
             isCircular={isCircularImage}
-            onError={(e) => {
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
               e.currentTarget.src = 'https://placehold.co/72x72/E0E0E0/333333?text=No+Image';
             }}
           />
-        </a>
+        </Link>
       )}
-      <StatsDetails>
-        <PrimaryText>{primaryText}</PrimaryText>
-        {secondaryText && <SecondaryText>{secondaryText}</SecondaryText>}
-        {tertiaryText && <TertiaryText>{tertiaryText}</TertiaryText>}
-      </StatsDetails>
+      <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+        <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+          {primaryText}
+        </Typography>
+        {secondaryText && (
+          <Typography variant="body2" color="text.secondary">
+            {secondaryText}
+          </Typography>
+        )}
+        {tertiaryText && (
+          <Typography variant="caption" color="text.disabled">
+            {tertiaryText}
+          </Typography>
+        )}
+      </Stack>
       {smallImages && smallImages.length > 0 && (
-        <SmallImageContainer>
+        <SmallImageWrapper>
           {smallImages.map((img, idx) => (
-            <a
+            <Link
               key={img.id}
               href={img.spotifyUrl}
               target="_blank"
               rel="noopener noreferrer"
               title={img.name}
             >
-              <SmallImage
+              <Avatar
                 src={img.url}
                 alt={img.name}
-                style={{ zIndex: smallImages.length - idx }}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: `2px solid ${theme.palette.background.paper}`,
+                  zIndex: smallImages.length - idx,
+                }}
               />
-            </a>
+            </Link>
           ))}
-        </SmallImageContainer>
+        </SmallImageWrapper>
       )}
-    </StatsCard>
+    </Paper>
   );
 };
-
-export const StatsCard = styled.div`
-  background-color: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  padding: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  border: 1px solid #e2e8f0;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -4px rgba(0, 0, 0, 0.08);
-  }
-`;
-
-export const StatsIndex = styled.div`
-  font-weight: 800;
-  font-size: 1.75rem;
-  min-width: 3rem;
-  text-align: center;
-  color: #9ca3af;
-  background-color: #f1f5f9; /* Off-white for contrast */
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.25rem;
-`;
-
-export const StatsImage = styled.img<{ isCircular: boolean }>`
-  width: 72px;
-  height: 72px;
-  border-radius: ${(props) => (props.isCircular ? '50%' : '0.5rem')};
-  object-fit: cover;
-  flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-export const StatsDetails = styled.div`
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
-export const PrimaryText = styled.div`
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
-  line-height: 1.3;
-`;
-
-export const SecondaryText = styled.div`
-  color: #6b7280;
-  font-size: 0.95rem;
-`;
-
-export const TertiaryText = styled.div`
-  color: #9ca3af;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-`;
-
-export const MessageContainer = styled.div`
-  padding: 1.5rem;
-  background-color: #e0f2fe;
-  color: #3b82f6;
-  border-radius: 0.5rem;
-  text-align: center;
-  font-weight: 500;
-  margin-top: 1.5rem;
-  border: 1px solid #93c5fd;
-`;
-
-export const SmallImageContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  -space-x: 0.5rem;
-  margin-left: 1rem;
-`;
-
-export const SmallImage = styled.img`
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  border: 2px solid white;
-  object-fit: cover;
-  &:not(:first-of-type) {
-    margin-left: -0.5rem;
-  }
-`;

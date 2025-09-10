@@ -8,9 +8,24 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      - '8000:8000'
     env_file:
       - ./.env
+    depends_on:
+      - db
+
+  liquibase:
+    image: liquibase/liquibase:4.26
+    container_name: liquibase
+    volumes:
+      - ./sqlScripts:/changelog
+    command: >
+      --url=jdbc:postgresql://db:5432/mydatabase
+      --username=postgres
+      --password=postgres
+      --searchPath=/changelog
+      --changelog-file=changelogs/V1__initial_schema.sql
+      update
     depends_on:
       - db
 
@@ -22,7 +37,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - NODE_ENV=development
 
@@ -35,6 +50,8 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - db_data:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
 
 volumes:
   db_data:
