@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel
 
@@ -13,6 +13,7 @@ class LanguageCount(BaseModel):
 class LanguageStats(BaseModel):
     total_tracks: int
     languages: List[LanguageCount]
+    top_languages: List[str]
     dominant_language: str
     language_diversity_score: float
 
@@ -20,5 +21,5 @@ class LanguageStats(BaseModel):
 class CachedLanguageData(BaseModel):
     track_id: str
     language: str
-    timestamp: str
+    timestamp: float
     confidence_score: float

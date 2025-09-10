@@ -21,6 +21,7 @@ type LeftPanelContextType = {
 
 const LeftPanelContext = createContext<LeftPanelContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLeftPanel = () => {
   const context = useContext(LeftPanelContext);
   if (!context) throw new Error('useLeftPanel must be used within LeftPanelProvider');
