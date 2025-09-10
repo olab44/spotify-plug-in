@@ -64,55 +64,11 @@ def get_spotify_user_info(access_token: str) -> SpotifyUser:
 oauth2_scheme = HTTPBearer()
 
 
-# src/login/service.py
-
-from src.config.database import SessionLocal  # Import SessionLocal
-
-# ... (other imports)
-from src.models import User
-
-# This is a temporary in-memory store for demonstration
-# You need a persistent way to store and retrieve tokens,
-# but for this example, we'll use a simple cache.
-user_cache = {}
-
-
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme)):
-    """Dependency to get the current user's token and ID from a bearer token."""
+    """Dependency to get the current user's token from a bearer token."""
     if not token.credentials:
         raise HTTPException(
             status_code=401, detail="Not authenticated: No bearer token provided"
         )
 
-    # In a real app, you would retrieve user data from your DB based on the token.
-    # For this example, we will retrieve the user from the database directly
-    # or fetch the info from Spotify if it's not present.
-
-    # This is a critical step: get the user from the database using their access token.
-    db = SessionLocal()
-    user = db.query(User).filter(User.access_token == token.credentials).first()
-    db.close()
-
-    if not user:
-        # If user not found in DB, it might be a new login or an invalid token
-        try:
-            user_info = get_spotify_user_info(token.credentials)
-            # You would then save this user to the DB and get their ID
-            # For now, let's just return what we have
-            return {
-                "access_token": token.credentials,
-                "id": user_info.id,
-                "display_name": user_info.display_name,
-                "email": user_info.email,
-            }
-        except HTTPException as e:
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired access token"
-            )
-
-    return {
-        "access_token": user.access_token,
-        "id": user.spotify_id,
-        "display_name": user.display_name,
-        "email": user.email,
-    }
+    return {"access_token": token.credentials}

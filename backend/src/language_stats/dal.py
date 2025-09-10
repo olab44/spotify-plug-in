@@ -37,9 +37,6 @@ async def stream_saved_tracks(token: str) -> AsyncIterator[Dict]:
 
 
 async def stream_user_playlists(token: str) -> AsyncIterator[Dict]:
-    """
-    Asynchronously streams all playlists owned by the current user.
-    """
     url = f"{SPOTIFY_API_BASE_URL}/me/playlists"
     async with aiohttp.ClientSession() as session:
         async for items in _get_paginated(url, token, session):
@@ -48,11 +45,10 @@ async def stream_user_playlists(token: str) -> AsyncIterator[Dict]:
 
 
 async def stream_all_user_tracks(token: str) -> AsyncIterator[Dict]:
-    """
-    Asynchronously streams all tracks from the user's saved tracks and all their playlists.
-    """
-
-    # Stream tracks from all user playlists
+    # saved tracks
+    async for track in stream_saved_tracks(token):
+        yield track
+    # tracks from all playlists
     async for playlist in stream_user_playlists(token):
         playlist_id = playlist.get("id")
         if playlist_id:

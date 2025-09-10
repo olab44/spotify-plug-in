@@ -3,9 +3,10 @@ from typing import Any, Dict, Tuple
 from langdetect import DetectorFactory, detect_langs
 
 from .cache import SimpleTTLCache
+from .lyrics import fetch_lyrics
 
 DetectorFactory.seed = 0
-cache = SimpleTTLCache()
+cache = SimpleTTLCache(ttl=86400)
 
 
 async def _langdetect_from_text(text: str) -> Tuple[str, float]:
@@ -24,13 +25,22 @@ async def detect_language_for_track(track: Dict[str, Any]) -> Tuple[str, float]:
     if not track_id:
         return "unknown", 0.0
 
+    # Check cache
     cached = await cache.get(track_id)
     if cached:
         return cached.get("language"), cached.get("confidence", 0.0)
 
     artist_names = " ".join([a.get("name", "") for a in track.get("artists", [])])
-    album_name = track.get("album", {}).get("name", "")
-    text = f"{track.get('name','')} {artist_names} {album_name}".strip()
+    track_name = track.get("name", "")
+
+    # Try lyrics first
+    lyrics = await fetch_lyrics(track_name, artist_names)
+    if lyrics:
+        text = lyrics
+    else:
+        # Fallback to title + artist + album
+        album_name = track.get("album", {}).get("name", "")
+        text = f"{track_name} {artist_names} {album_name}".strip()
 
     lang, conf = await _langdetect_from_text(text)
     await cache.set(track_id, {"language": lang, "confidence": conf})

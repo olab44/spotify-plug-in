@@ -1,25 +1,23 @@
+import asyncio
 import time
-from asyncio import Lock
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class SimpleTTLCache:
-    def __init__(self, ttl_seconds: int = 86400):
-        self._store = {}
-        self._ttl = ttl_seconds
-        self._lock = Lock()
+    def __init__(self, ttl: int = 86400):  # 24h
+        self.store: Dict[str, Dict[str, Any]] = {}
+        self.ttl = ttl
+        self.lock = asyncio.Lock()
 
-    async def get(self, key: str) -> Optional[dict]:
-        async with self._lock:
-            entry = self._store.get(key)
-            if not entry:
-                return None
-            value, ts = entry
-            if time.time() - ts > self._ttl:
-                del self._store[key]
-                return None
-            return value
+    async def get(self, key: str) -> Optional[Dict[str, Any]]:
+        async with self.lock:
+            entry = self.store.get(key)
+            if entry and time.time() - entry["timestamp"] < self.ttl:
+                return entry["value"]
+            elif entry:
+                del self.store[key]
+            return None
 
-    async def set(self, key: str, value: dict):
-        async with self._lock:
-            self._store[key] = (value, time.time())
+    async def set(self, key: str, value: Dict[str, Any]):
+        async with self.lock:
+            self.store[key] = {"value": value, "timestamp": time.time()}

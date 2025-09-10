@@ -1,9 +1,9 @@
 from typing import AsyncIterable
 
-from .processor import aggregate_from_stream, finalize_stats
-from .schemas import LanguageStats
+from .aggregator import aggregate_from_stream, finalize_stats
 
 
-async def stats_from_stream(track_stream: AsyncIterable[dict]) -> LanguageStats:
+async def stats_from_stream(track_stream: AsyncIterable[dict]):
     counts = await aggregate_from_stream(track_stream)
-    return finalize_stats(counts)
+    stats = finalize_stats(counts)
+    return stats
