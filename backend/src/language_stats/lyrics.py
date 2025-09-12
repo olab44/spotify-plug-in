@@ -1,12 +1,15 @@
+import os
 import re
 from typing import Optional
 
 import aiohttp
+from dotenv import load_dotenv
 
-GENIUS_API_BASE = "https://api.genius.com"
-# GENIUS_TOKEN = "YOUR_GENIUS_API_TOKEN"
-GENIUS_API_KEY = "J3sGc4gXr3j6v6HU1ErmrPzRbtquoB9n3xq4wjlu4M2av6ecSXLF-ldjSu9il_LD"
-GENIUS_TOKEN = "qCKnUNRf19-yzmVfXRZvfM1jKWPm3YcLORkRRNhRRFMGG8JQEmBUbV-7tzlgrVF_"
+load_dotenv()
+
+GENIUS_API_BASE = os.getenv("GENIUS_API_BASE")
+GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
+GENIUS_TOKEN = os.getenv("GENIUS_TOKEN")
 
 
 async def fetch_lyrics(track_name: str, artist_name: str) -> Optional[str]:

@@ -45,10 +45,8 @@ async def stream_user_playlists(token: str) -> AsyncIterator[Dict]:
 
 
 async def stream_all_user_tracks(token: str) -> AsyncIterator[Dict]:
-    # saved tracks
     async for track in stream_saved_tracks(token):
         yield track
-    # tracks from all playlists
     async for playlist in stream_user_playlists(token):
         playlist_id = playlist.get("id")
         if playlist_id:
