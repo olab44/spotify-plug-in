@@ -1,4 +1,16 @@
-import { MenuIcon } from '@/components/layout/Header';
+import CloseIcon from '@mui/icons-material/Close';
+import MenuIcon from '@mui/icons-material/Menu';
+import {
+  Backdrop,
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -9,6 +21,7 @@ type LeftPanelContextType = {
 
 const LeftPanelContext = createContext<LeftPanelContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLeftPanel = () => {
   const context = useContext(LeftPanelContext);
   if (!context) throw new Error('useLeftPanel must be used within LeftPanelProvider');
@@ -38,58 +51,89 @@ const NavLinkItem: React.FC<{ label: string; path: string; onClick: () => void }
   onClick,
 }) => {
   const location = useLocation();
+  const theme = useTheme();
   const isActive = location.pathname === path;
 
   return (
-    <Link
+    <ListItem
+      component={Link}
       to={path}
       onClick={onClick}
-      className={`block px-6 py-3 rounded-lg mb-2 text-lg font-semibold transition-colors duration-200 ${
-        isActive ? 'bg-green-600' : 'hover:bg-gray-800'
-      }`}
+      sx={{
+        borderRadius: 1,
+        mb: 1,
+        mx: 1,
+        color: 'text.primary',
+        bgcolor: isActive ? 'primary.main' : 'transparent',
+        '&:hover': {
+          bgcolor: isActive ? 'primary.dark' : 'action.hover',
+        },
+      }}
     >
-      {label}
-    </Link>
+      <ListItemText
+        primary={
+          <Typography variant="subtitle1" component="span" sx={{ fontWeight: 600 }}>
+            {label}
+          </Typography>
+        }
+      />
+    </ListItem>
   );
 };
 
 const LeftPanel: React.FC = () => {
   const { open, setOpen } = useLeftPanel();
+  const theme = useTheme();
 
   const closePanel = () => setOpen(false);
 
   return (
     <>
-      {!open && <MenuIcon onClick={() => setOpen(true)} />}
-      <aside
-        className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
-          open ? 'w-64' : 'w-0'
-        } bg-gray-900 text-white shadow-lg overflow-hidden`}
-        style={{ pointerEvents: open ? 'auto' : 'none' }}
-      >
-        {open && (
-          <>
-            <button
-              className="absolute top-4 right-4 bg-gray-700 rounded-full p-2 hover:bg-gray-600"
-              onClick={closePanel}
-              aria-label="Hide panel"
-            >
-              ×
-            </button>
-            <nav className="mt-16">
-              {NAV_ITEMS.map((item) => (
-                <NavLinkItem key={item.path} {...item} onClick={closePanel} />
-              ))}
-            </nav>
-          </>
-        )}
-      </aside>
-      {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-30 cursor-pointer"
-          onClick={closePanel}
-        />
+      {!open && (
+        <IconButton
+          color="inherit"
+          aria-label="open menu"
+          onClick={() => setOpen(true)}
+          edge="start"
+          sx={{ ml: 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
       )}
+      <Drawer
+        variant="temporary"
+        anchor="left"
+        open={open}
+        onClose={closePanel}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 256,
+            bgcolor: 'background.paper',
+            backgroundImage: 'none',
+          },
+        }}
+      >
+        <Box sx={{ position: 'relative', height: '100%' }}>
+          <IconButton
+            onClick={closePanel}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'text.secondary',
+            }}
+            aria-label="close menu"
+          >
+            <CloseIcon />
+          </IconButton>
+          <List sx={{ mt: 8 }}>
+            {NAV_ITEMS.map((item) => (
+              <NavLinkItem key={item.path} {...item} onClick={closePanel} />
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+      <Backdrop open={open} onClick={closePanel} sx={{ zIndex: theme.zIndex.drawer - 1 }} />
     </>
   );
 };
