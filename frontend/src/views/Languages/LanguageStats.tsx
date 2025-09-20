@@ -7,7 +7,7 @@ import {
   Text,
   Title,
 } from '@/components/common/StyledComponents';
-import { useLanguageApi } from '@/hooks/api/languageApi';
+import { useLanguageApi } from '@/hooks/api';
 import { useGetPlaylists } from '@/hooks/useGetPlaylists';
 import { useLanguageStats } from '@/hooks/useLanguageStats';
 import styled from '@emotion/styled';
@@ -23,7 +23,6 @@ export const LanguageStats: React.FC = () => {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
   const { playlists, loading: playlistsLoading, error: playlistsError } = useGetPlaylists();
 
-  // Get stats (scope = playlist or global)
   const scope = selectedPlaylist ? 'playlist' : 'global';
   const { stats, isLoading, error } = useLanguageStats(scope, selectedPlaylist || undefined);
 
@@ -119,7 +118,6 @@ export const LanguageStats: React.FC = () => {
   );
 };
 
-// Styled components for dropdown/filter
 const FilterContainer = styled.div`
   margin-bottom: 16px;
   display: flex;

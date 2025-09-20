@@ -5,3 +5,4 @@ export const useArtistsApi = createApiHook('/top-artists');
 export const useGenresApi = createApiHook('/top-genres');
 export const usePlaylistsApi = createApiHook('/playlists');
 export const useSpotifyApi = createApiHook('/spotify');
+export const useLanguageApi = createApiHook('/language');

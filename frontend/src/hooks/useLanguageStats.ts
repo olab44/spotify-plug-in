@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLanguageApi } from './api/languageApi';
+import { useLanguageApi } from './api';
 
 export interface LanguageCount {
   language_code: string;

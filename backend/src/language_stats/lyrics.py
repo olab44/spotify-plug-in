@@ -10,6 +10,7 @@ load_dotenv()
 GENIUS_API_BASE = os.getenv("GENIUS_API_BASE")
 GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
 GENIUS_TOKEN = os.getenv("GENIUS_TOKEN")
+BASE_GENIUS_URL = "https://genius.com"
 
 
 async def fetch_lyrics(track_name: str, artist_name: str) -> Optional[str]:
@@ -26,7 +27,7 @@ async def fetch_lyrics(track_name: str, artist_name: str) -> Optional[str]:
                 return None
 
             song_path = hits[0]["result"]["path"]
-            lyrics_url = f"https://genius.com{song_path}"
+            lyrics_url = f"{BASE_GENIUS_URL}{song_path}"
 
             async with session.get(lyrics_url) as lyric_resp:
                 html = await lyric_resp.text()
