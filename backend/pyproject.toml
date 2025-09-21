@@ -1,7 +1,7 @@
 [project]
-name = "FastAPI-app"
+name = "spotify-plug-in-backend"
 version = "0.1.0"
-description = "A simple FastAPI application."
+description = "Backend service for Spotify Plugin application"
 
 readme = "README.md"
 requires-python = ">=3.11"
@@ -11,3 +11,46 @@ dependencies = "requirements.txt"
 
 [project.optional-dependencies]
 dev-requirements = {file = "dev-requirements.txt"}
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --cov=src --cov-report=xml --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "tests/*",
+    "**/__init__.py",
+    "**/config/*",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+show_missing = true
+fail_under = 80
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
