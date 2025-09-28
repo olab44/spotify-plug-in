@@ -11,7 +11,8 @@
     "lint:fix": "eslint \"./src/**/*.{js,jsx,ts,tsx}\" --fix",
     "test": "vitest",
     "test:ci": "vitest run --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prettier": "npx prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

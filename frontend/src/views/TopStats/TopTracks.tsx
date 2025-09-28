@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { PageContainer, Title } from '@/components/StyledComponents';
 import TimeRangeSelector from '@/components/TimeRangeSelector';

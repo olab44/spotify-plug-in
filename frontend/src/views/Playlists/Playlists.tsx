@@ -61,7 +61,9 @@ const PlaylistCard = styled.div`
   background-color: #212121;
   border-radius: 8px;
   padding: 16px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   cursor: pointer;
 
   &:hover {

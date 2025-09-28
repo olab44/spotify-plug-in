@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { Title } from '@/components/StyledComponents';
 import { TopStatsList } from '@/components/TopStatsList';

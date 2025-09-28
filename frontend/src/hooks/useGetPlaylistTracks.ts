@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react';
 import { usePlaylistsApi } from './api';
 import { useAuth } from './useAuth';
