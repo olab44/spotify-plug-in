@@ -1,5 +1,3 @@
-"""Common test fixtures and configuration."""
-
 import asyncio
 from typing import AsyncGenerator, Generator
 
@@ -13,7 +11,6 @@ from src.config.database import get_redis_client
 from src.dependencies import get_current_user
 from src.main import app
 
-# Mock user data for testing
 TEST_USER = {
     "id": "test_user_id",
     "display_name": "Test User",
@@ -76,11 +73,3 @@ def mock_current_user():
 def mock_spotify_api(mocker):
     """Mock Spotify API client."""
     return mocker.patch("src.config.spotify.Spotify")
-
-
-# Add more fixtures as needed for:
-# - Database connections (using aiosqlite or test PostgreSQL)
-# - External API mocks
-# - Authentication/authorization
-# - File system operations
-# - Etc.
