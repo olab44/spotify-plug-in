@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   lint-analysis:
-    name: 1. Lint & Static Analysis
+    name: lint
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +52,7 @@ jobs:
         run: bun run type-check
 
   unit-tests:
-    name: 2. Unit & Integration Tests
+    name: unit-tests
     needs: lint-analysis
     runs-on: ubuntu-latest
 
@@ -85,7 +85,7 @@ jobs:
           fail_ci_if_error: true
 
   build-check:
-    name: 3. Build Check
+    name: build-check
     needs: unit-tests
     runs-on: ubuntu-latest
 
@@ -110,7 +110,7 @@ jobs:
         run: bun run build
 
   dependency-audit:
-    name: 4. Dependency & Security Audit
+    name: dependency-audit
     needs: build-check
     runs-on: ubuntu-latest
 
@@ -138,7 +138,7 @@ jobs:
         run: npm outdated || true
 
   docker-build:
-    name: 5. Docker Build & Push
+    name: docker-build
     needs: dependency-audit
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest

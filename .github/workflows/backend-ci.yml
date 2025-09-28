@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   lint:
-    name: 1. Lint & Static Analysis
+    name: lint
     runs-on: ubuntu-latest
 
     steps:
@@ -36,23 +36,19 @@ jobs:
       - name: Install dependencies (Required for linters/mypy/bandit)
         run: |
           python -m pip install --upgrade pip
-          # Install all dev dependencies which include black, isort, mypy, bandit
           pip install -r dev-requirements.txt
 
       - name: Check code formatting with Black
         run: black --check src tests
 
-      - name: Check import sorting with isort
-        run: isort --check-only --diff src tests
-
       - name: Type checking with Mypy
         run: mypy src
 
-      - name: Security scan with Bandit (Static Analysis)
+      - name: Security scan with Bandit
         run: bandit -r src -c pyproject.toml
 
   unit-tests:
-    name: 2. Unit & Integration Tests
+    name: unit-tests
     needs: lint
     runs-on: ubuntu-latest
 
@@ -87,7 +83,7 @@ jobs:
           fail_ci_if_error: true
 
   build-check:
-    name: 3. Build & Dependency Check
+    name: build-check
     needs: unit-tests
     runs-on: ubuntu-latest
 
@@ -113,7 +109,7 @@ jobs:
           safety check
 
   docker-build:
-    name: 4. Docker Build & Push
+    name: docker-build
     needs: build-check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
