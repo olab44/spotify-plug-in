@@ -15,7 +15,7 @@ def get_playlist_tracks(access_token: str, playlist_id: str) -> Optional[List[Di
 
     try:
         while url:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
 

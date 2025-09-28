@@ -1,17 +1,16 @@
 import math
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
-
 from src.config.constants import SPOTIFY_API_BASE_URL
 from src.top_tracks.service import get_top_tracks
 
 from .utils import get_playlist_tracks
 
 
-def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
+def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict[str, Any]]:
     """Orchestrates fetching data and calculating all playlist statistics."""
     try:
         tracks = get_playlist_tracks(access_token, playlist_id)
@@ -58,12 +57,11 @@ def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
             stats["tasteSimilarity"] = calculate_taste_similarity(tracks, user_top_tracks)
         return stats
 
-    except Exception as e:
-        print(f"Error in get_playlist_stats: {e}")
+    except Exception:
         return None
 
 
-def calculate_total_duration(tracks: List[Dict]) -> str:
+def calculate_total_duration(tracks: List[Dict[str, Any]]) -> str:
     total_ms = sum(track["duration_ms"] for track in tracks)
     total_seconds = total_ms // 1000
     minutes = (total_seconds % 3600) // 60
@@ -71,26 +69,26 @@ def calculate_total_duration(tracks: List[Dict]) -> str:
     return f"{hours}h {minutes}m"
 
 
-def calculate_avg_popularity(tracks: List[Dict]) -> float:
-    return sum(track["popularity"] for track in tracks) / len(tracks)
+def calculate_avg_popularity(tracks: List[Dict[str, Any]]) -> float:
+    return float(sum(track["popularity"] for track in tracks) / len(tracks))
 
 
-def calculate_median_popularity(tracks: List[Dict]) -> float:
+def calculate_median_popularity(tracks: List[Dict[str, Any]]) -> float:
     popularities = sorted([track["popularity"] for track in tracks])
     mid = len(popularities) // 2
     return (
-        popularities[mid]
+        float(popularities[mid])
         if len(popularities) % 2 != 0
-        else (popularities[mid - 1] + popularities[mid]) / 2
+        else (popularities[mid - 1] + popularities[mid]) / 2.0
     )
 
 
-def calculate_explicit_ratio(tracks: List[Dict]) -> float:
+def calculate_explicit_ratio(tracks: List[Dict[str, Any]]) -> float:
     explicit_count = sum(1 for track in tracks if track["explicit"])
     return explicit_count / len(tracks)
 
 
-def find_duplicate_tracks(tracks: List[Dict]) -> List[Dict]:
+def find_duplicate_tracks(tracks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     track_counts = Counter(track["id"] for track in tracks)
     duplicates = [
         {"name": track["name"], "count": track_counts[track["id"]]}
@@ -100,7 +98,7 @@ def find_duplicate_tracks(tracks: List[Dict]) -> List[Dict]:
     return list({v["name"]: v for v in duplicates}.values())
 
 
-def parse_release_date(date_str: str):
+def parse_release_date(date_str: str) -> Optional[datetime]:
     """Parse Spotify release_date safely into a UTC datetime."""
     if not date_str:
         return None
@@ -110,17 +108,14 @@ def parse_release_date(date_str: str):
             return datetime.strptime(date_str, "%Y").replace(month=1, day=1, tzinfo=timezone.utc)
         elif len(date_str) == 7:
             return datetime.strptime(date_str, "%Y-%m").replace(day=1, tzinfo=timezone.utc)
-        elif len(date_str) == 10:
-            return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-        else:
-            return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     except Exception:
         return None
 
 
-def calculate_release_year_stats(tracks: List[Dict]) -> Dict:
-    release_years = []
-    release_dates = []
+def calculate_release_year_stats(tracks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    release_years: List[int] = []
+    release_dates: List[datetime] = []
 
     for track in tracks:
         release_date_str = track.get("album", {}).get("release_date")
@@ -133,18 +128,18 @@ def calculate_release_year_stats(tracks: List[Dict]) -> Dict:
 
     if not release_years:
         return {
-            "avgReleaseYear": 0,
+            "avgReleaseYear": 0.0,
             "oldestTrack": {"name": "N/A", "year": 0},
             "newestTrack": {"name": "N/A", "year": 0},
             "histogram": {},
         }
 
-    year_histogram = defaultdict(int)
+    year_histogram: Dict[str, int] = defaultdict(int)
     for year in release_years:
         year_histogram[str(year)] += 1
 
-    def normalize_for_sort(track):
-        parsed = parse_release_date(track.get("album", {}).get("release_date"))
+    def normalize_for_sort(track: Dict[str, Any]) -> datetime:
+        parsed = parse_release_date(track.get("album", {}).get("release_date", ""))
         return parsed or datetime.max.replace(tzinfo=timezone.utc)
 
     oldest_track_data = min(tracks, key=normalize_for_sort)
@@ -164,11 +159,13 @@ def calculate_release_year_stats(tracks: List[Dict]) -> Dict:
     }
 
 
-def calculate_audio_features_stats(features: List[Dict]) -> Dict:
+def calculate_audio_features_stats(
+    features: List[Dict[str, float | int]],
+) -> Dict[str, float | Counter[int]]:
     if not features:
         return {}
 
-    def safe_avg(key):
+    def safe_avg(key: str) -> float:
         values = [f[key] for f in features if key in f]
         return sum(values) / len(values) if values else 0.0
 
@@ -179,11 +176,13 @@ def calculate_audio_features_stats(features: List[Dict]) -> Dict:
         "avgTempo": safe_avg("tempo"),
         "acousticness": safe_avg("acousticness"),
         "instrumentalness": safe_avg("instrumentalness"),
-        "modeDistribution": Counter(f["mode"] for f in features if "mode" in f),
+        "modeDistribution": Counter(int(f["mode"]) for f in features if "mode" in f),
     }
 
 
-def calculate_genre_stats(genres: List[str]) -> Dict:
+def calculate_genre_stats(
+    genres: List[str],
+) -> Dict[str, Dict[str, int] | int]:
     if not genres:
         return {"topGenres": {}, "uniqueGenresCount": 0}
     genre_counts = Counter(genres)
@@ -193,23 +192,23 @@ def calculate_genre_stats(genres: List[str]) -> Dict:
     }
 
 
-def calculate_freshness_score(tracks: List[Dict]) -> float:
+def calculate_freshness_score(tracks: List[Dict[str, Any]]) -> float:
     if not tracks:
         return 0.0
     now = datetime.now(timezone.utc)
 
-    valid_dates = [
-        parse_release_date(track["album"].get("release_date"))
+    potential_dates = [
+        parse_release_date(track["album"].get("release_date", ""))
         for track in tracks
         if "album" in track and track["album"].get("release_date")
     ]
-    valid_dates = [d for d in valid_dates if d]
+    valid_dates: List[datetime] = [d for d in potential_dates if d]
 
     if not valid_dates:
         return 0.0
 
     avg_age_days = sum((now - date).days for date in valid_dates) / len(valid_dates)
-    return max(0, 100 - (avg_age_days / 365))
+    return max(0.0, 100.0 - (avg_age_days / 365.25))
 
 
 def calculate_diversity_score(genres: List[str]) -> float:
@@ -217,7 +216,7 @@ def calculate_diversity_score(genres: List[str]) -> float:
         return 0.0
     genre_counts = Counter(genres)
     total_genres = len(genres)
-    entropy = 0
+    entropy = 0.0
     for count in genre_counts.values():
         p = count / total_genres
         if p > 0:
@@ -225,7 +224,7 @@ def calculate_diversity_score(genres: List[str]) -> float:
     return entropy
 
 
-def calculate_hits_vs_gems(tracks: List[Dict]) -> Dict:
+def calculate_hits_vs_gems(tracks: List[Dict[str, Any]]) -> Dict[str, float]:
     if not tracks:
         return {"hitsRatio": 0.0, "gemsRatio": 0.0}
 
@@ -236,13 +235,16 @@ def calculate_hits_vs_gems(tracks: List[Dict]) -> Dict:
     hits_count = sum(1 for track in valid_tracks if track["popularity"] > 70)
     gems_count = sum(1 for track in valid_tracks if track["popularity"] < 30)
 
+    total_valid = len(valid_tracks)
     return {
-        "hitsRatio": hits_count / len(valid_tracks),
-        "gemsRatio": gems_count / len(valid_tracks),
+        "hitsRatio": hits_count / total_valid,
+        "gemsRatio": gems_count / total_valid,
     }
 
 
-def calculate_taste_similarity(playlist_tracks: List[Dict], user_top_tracks: List[Dict]) -> float:
+def calculate_taste_similarity(
+    playlist_tracks: List[Dict[str, Any]], user_top_tracks: List[Dict[str, Any]]
+) -> float:
     if not playlist_tracks or not user_top_tracks:
         return 0.0
     playlist_ids = {track["id"] for track in playlist_tracks if "id" in track}
@@ -251,26 +253,26 @@ def calculate_taste_similarity(playlist_tracks: List[Dict], user_top_tracks: Lis
     return len(common_tracks) / len(playlist_ids) if playlist_ids else 0.0
 
 
-def get_genres_for_artists(access_token: str, artist_ids: list):
+def get_genres_for_artists(access_token: str, artist_ids: List[str]) -> Dict[str, List[str]]:
     """Fetches genres for a list of artist IDs and returns a dictionary."""
     if not access_token or not artist_ids:
         return {}
 
     headers = {"Authorization": f"Bearer {access_token}"}
-    artist_genres = defaultdict(list)
+    artist_genres: Dict[str, List[str]] = defaultdict(list)
 
     for i in range(0, len(artist_ids), 50):
         batch_ids = artist_ids[i : i + 50]
         ids_param = ",".join(batch_ids)
         url = f"{SPOTIFY_API_BASE_URL}/artists?ids={ids_param}"
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
             for artist in data.get("artists", []):
-                artist_genres[artist["id"]].extend(artist.get("genres", []))
-        except requests.RequestException as e:
-            print(f"Error fetching artist data: {e}")
-            return {}
+                if artist and artist.get("id"):
+                    artist_genres[artist["id"]].extend(artist.get("genres", []))
+        except requests.RequestException:
+            break
 
     return dict(artist_genres)

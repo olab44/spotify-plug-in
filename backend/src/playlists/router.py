@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-
 from src.login.service import get_current_user
 
 from .service import get_playlist_data, get_user_playlists, remove_duplicate_tracks
@@ -8,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/all")
-def get_playlists(user: dict = Depends(get_current_user)):
+def get_playlists(user: dict = Depends(get_current_user)) -> list[dict]:
     access_token = user.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -20,7 +19,9 @@ def get_playlists(user: dict = Depends(get_current_user)):
 
 
 @router.get("/{playlist_id}")
-def get_playlist(playlist_id: str, user: dict = Depends(get_current_user)):
+def get_playlist(
+    playlist_id: str, user: dict = Depends(get_current_user)
+) -> dict[str, dict | list]:
     access_token = user.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -40,7 +41,7 @@ def get_playlist(playlist_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.post("/{playlist_id}/remove-duplicates")
-def remove_duplicates(playlist_id: str, user: dict = Depends(get_current_user)):
+def remove_duplicates(playlist_id: str, user: dict = Depends(get_current_user)) -> dict[str, str]:
     access_token = user.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")

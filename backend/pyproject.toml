@@ -16,31 +16,31 @@ dev-requirements = {file = "dev-requirements.txt"}
 minversion = "7.0"
 addopts = "-ra -q --cov=src --cov-report=xml --cov-report=term-missing"
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
+python_files = ["test_.py"]
+python_classes = ["Test"]
 python_functions = ["test_*"]
 filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::UserWarning",
+"ignore::DeprecationWarning",
+"ignore::UserWarning",
 ]
 asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["src"]
 omit = [
-    "tests/*",
-    "**/__init__.py",
-    "**/config/*",
+"tests/",
+"/init.py",
+"/config/",
 ]
 branch = true
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
+"pragma: no cover",
+"def repr",
+"raise NotImplementedError",
+"if name == .main.:",
+"if TYPE_CHECKING:",
 ]
 show_missing = true
 fail_under = 80
@@ -48,10 +48,15 @@ fail_under = 80
 [tool.black]
 line-length = 100
 target-version = ['py311']
-include = '\.pyi?$'
+include = '.pyi?$'
 
 [tool.mypy]
 python_version = "3.11"
+
+ignore_missing_imports = true
+
+namespace_packages = true
+
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -65,7 +70,6 @@ warn_no_return = true
 warn_unreachable = true
 plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
 
-
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
@@ -75,12 +79,10 @@ disallow_incomplete_defs = false
 exclude_dirs = ["tests", "examples"]
 tests = ["B201", "B301"]
 skips = ["B101", "B601"]
-include = '\.pyi?$'
-
+include = '.pyi?$'
 
 [build-system]
 requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["src"]

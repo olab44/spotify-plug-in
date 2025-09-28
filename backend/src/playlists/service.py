@@ -1,3 +1,5 @@
+from typing import Dict, List, Optional
+
 import requests
 from src.config.constants import SPOTIFY_API_BASE_URL
 
@@ -5,14 +7,14 @@ from .stats import get_playlist_stats
 from .utils import get_playlist_tracks
 
 
-def get_user_playlists(access_token: str):
+def get_user_playlists(access_token: str) -> Optional[List[Dict]]:
     """Fetches all of a user's playlists."""
     headers = {"Authorization": f"Bearer {access_token}"}
-    playlists = []
+    playlists: List[Dict] = []
     url = f"{SPOTIFY_API_BASE_URL}/me/playlists?limit=50"
     try:
         while url:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
             playlists.extend(data["items"])
@@ -23,16 +25,17 @@ def get_user_playlists(access_token: str):
     return playlists
 
 
-def get_playlist_data(access_token: str, playlist_id: str):
+def get_playlist_data(
+    access_token: str, playlist_id: str
+) -> Optional[Dict[str, List[Dict] | Dict]]:
     """Fetches tracks and calculates stats for a specific playlist."""
     headers = {"Authorization": f"Bearer {access_token}"}
     try:
         playlist_response = requests.get(
-            f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}", headers=headers
+            f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}", headers=headers, timeout=10
         )
         playlist_response.raise_for_status()
         playlist_info = playlist_response.json()
-        tracks = [item["track"] for item in playlist_info["tracks"]["items"]]
 
         stats = get_playlist_stats(access_token, playlist_id)
         if stats is None:
@@ -44,17 +47,19 @@ def get_playlist_data(access_token: str, playlist_id: str):
         return None
 
 
-def remove_duplicate_tracks(access_token: str, playlist_id: str):
-    """Removes all duplicate tracks from a playlist."""
+def remove_duplicate_tracks(access_token: str, playlist_id: str) -> bool:
+    """Removes all duplicate tracks from a playlist.
+    Returns True on success, False on failure or if no tracks found/auth fails.
+    """
     if not access_token:
-        return None
+        return False
 
     tracks = get_playlist_tracks(access_token, playlist_id)
     if not tracks:
-        return None
+        return False
 
     seen_track_ids = set()
-    duplicates_to_remove = []
+    duplicates_to_remove: List[Dict[str, str]] = []
 
     for track in tracks:
         if track["id"] in seen_track_ids:
@@ -76,7 +81,7 @@ def remove_duplicate_tracks(access_token: str, playlist_id: str):
         payload = {"tracks": batch}
         url = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
         try:
-            response = requests.delete(url, headers=headers, json=payload)
+            response = requests.delete(url, headers=headers, json=payload, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"Error removing tracks from playlist: {e}")

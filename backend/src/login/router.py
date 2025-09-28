@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
+from starlette.responses import JSONResponse
 
-from src.login.schemas import SpotifyUser
-from src.login.service import (
+from .schemas import SpotifyUser
+from .service import (
     get_current_user,
     get_spotify_auth_url,
     get_spotify_token,
@@ -13,14 +14,14 @@ router = APIRouter(tags=["spotify"])
 
 
 @router.get("/login")
-def login():
+def login() -> RedirectResponse:
     """Redirects the user to Spotify's authentication page."""
     auth_url = get_spotify_auth_url()
     return RedirectResponse(url=auth_url)
 
 
 @router.get("/callback")
-def spotify_callback(code: str):
+def spotify_callback(code: str) -> RedirectResponse:
     """Exchanges code for token and redirects to frontend with token in URL fragment."""
     try:
         token_data = get_spotify_token(code)
@@ -32,13 +33,13 @@ def spotify_callback(code: str):
 
 
 @router.post("/logout")
-def logout():
+def logout() -> JSONResponse:
     """Removes the token from the in-memory store."""
-    return {"message": "Logged out successfully"}
+    return JSONResponse({"message": "Logged out successfully"})
 
 
 @router.get("/me", response_model=SpotifyUser)
-def get_user_info(user: dict = Depends(get_current_user)):
+def get_user_info(user: dict = Depends(get_current_user)) -> SpotifyUser:
     """Fetches and returns the current user's profile information."""
     access_token = user.get("access_token")
     if not access_token:

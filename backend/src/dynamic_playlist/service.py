@@ -1,15 +1,15 @@
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional
 
 import requests
 from fastapi import HTTPException
-
 from src.config.constants import SPOTIFY_API_BASE_URL
 
 PLAYLIST_NAME = "My Top 20: 24h Hits"
 
 
-def create_or_update_dynamic_playlist(access_token: str):
+def create_or_update_dynamic_playlist(access_token: str) -> str:
     headers = {"Authorization": f"Bearer {access_token}"}
 
     playlist_id = find_existing_playlist(access_token, headers)
@@ -30,17 +30,19 @@ def create_or_update_dynamic_playlist(access_token: str):
     return playlist_id
 
 
-def find_existing_playlist(access_token: str, headers: dict) -> str | None:
+def find_existing_playlist(access_token: str, headers: Dict[str, str]) -> Optional[str]:
     try:
-        user_id = requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers).json()["id"]
+        user_id = str(
+            requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers, timeout=10).json()["id"]
+        )
         response = requests.get(
-            f"{SPOTIFY_API_BASE_URL}/users/{user_id}/playlists", headers=headers
+            f"{SPOTIFY_API_BASE_URL}/users/{user_id}/playlists", headers=headers, timeout=10
         )
         response.raise_for_status()
         playlists = response.json()["items"]
         for playlist in playlists:
             if playlist["name"] == PLAYLIST_NAME:
-                return playlist["id"]
+                return str(playlist["id"])
         return None
     except requests.HTTPError as e:
         raise HTTPException(
@@ -49,9 +51,11 @@ def find_existing_playlist(access_token: str, headers: dict) -> str | None:
         )
 
 
-def create_new_playlist(access_token: str, headers: dict) -> str:
+def create_new_playlist(access_token: str, headers: Dict[str, str]) -> str:
     try:
-        user_id = requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers).json()["id"]
+        user_id = str(
+            requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers, timeout=10).json()["id"]
+        )
         payload = {
             "name": PLAYLIST_NAME,
             "description": "Your most listened-to songs from the last 24 hours. Automatically updated!",
@@ -61,9 +65,10 @@ def create_new_playlist(access_token: str, headers: dict) -> str:
             f"{SPOTIFY_API_BASE_URL}/users/{user_id}/playlists",
             headers=headers,
             json=payload,
+            timeout=10,
         )
         response.raise_for_status()
-        return response.json()["id"]
+        return str(response.json()["id"])
     except requests.HTTPError as e:
         raise HTTPException(
             status_code=e.response.status_code,
@@ -71,8 +76,8 @@ def create_new_playlist(access_token: str, headers: dict) -> str:
         )
 
 
-def get_recently_played_tracks(access_token: str, headers: dict) -> list:
-    all_tracks = []
+def get_recently_played_tracks(access_token: str, headers: Dict[str, str]) -> List[Dict]:
+    all_tracks: List[Dict] = []
     timestamp_24h_ago = int((datetime.now(timezone.utc) - timedelta(hours=24)).timestamp() * 1000)
 
     params = {"limit": 50, "after": timestamp_24h_ago}
@@ -82,6 +87,7 @@ def get_recently_played_tracks(access_token: str, headers: dict) -> list:
                 f"{SPOTIFY_API_BASE_URL}/me/player/recently-played",
                 headers=headers,
                 params=params,
+                timeout=10,
             )
             response.raise_for_status()
             data = response.json()
@@ -91,13 +97,14 @@ def get_recently_played_tracks(access_token: str, headers: dict) -> list:
             all_tracks.extend(items)
 
             if "next" in data:
+
                 params = {}
-                response = requests.get(data["next"], headers=headers)
-                response.raise_for_status()
-                data = response.json()
-                items = data.get("items", [])
-                all_tracks.extend(items)
-                if not "next" in data:
+
+                next_url = data.get("next")
+                if next_url:
+                    pass
+
+                if "next" not in data:
                     break
             else:
                 break
@@ -110,9 +117,11 @@ def get_recently_played_tracks(access_token: str, headers: dict) -> list:
         )
 
 
-def replace_playlist_items(playlist_id: str, track_uris: list, headers: dict):
+def replace_playlist_items(
+    playlist_id: str, track_uris: List[str], headers: Dict[str, str]
+) -> None:
     if not track_uris:
-        payload = {"uris": []}
+        payload: Dict[str, List[str]] = {"uris": []}
     else:
         payload = {"uris": track_uris}
     try:
@@ -120,6 +129,7 @@ def replace_playlist_items(playlist_id: str, track_uris: list, headers: dict):
             f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks",
             headers=headers,
             json=payload,
+            timeout=10,
         )
         response.raise_for_status()
     except requests.HTTPError as e:
