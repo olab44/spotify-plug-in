@@ -45,7 +45,7 @@ jobs:
         run: mypy src
 
       - name: Security scan with Bandit
-        run: bandit -r src -c pyproject.toml
+        run: bandit -r src
 
   unit-tests:
     name: unit-tests
