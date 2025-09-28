@@ -19,3 +19,4 @@ aiohttp>=3.8.0
 websockets>=11.0.0
 aioredis==2.0.1
 langid==1.1.6
+bandit==1.7.0
