@@ -6,17 +6,17 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/**'
-      - '.github/workflows/main-pipeline.yml'
-      - '.github/workflows/backend-jobs.yml'
-      - '.github/workflows/frontend-jobs.yml'
+      - '.github/workflows/pipeline.yml'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [main, master]
     paths:
       - 'frontend/**'
       - 'backend/**'
-      - '.github/workflows/main-pipeline.yml'
-      - '.github/workflows/backend-jobs.yml'
-      - '.github/workflows/frontend-jobs.yml'
+      - '.github/workflows/pipeline.yml'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/frontend-ci.yml'
   workflow_dispatch:
 
 jobs:
@@ -41,12 +41,12 @@ jobs:
     name: Run Backend CI
     needs: check_paths
     if: needs.check_paths.outputs.backend == 'true'
-    uses: ./.github/workflows/backend-jobs.yml
+    uses: ./.github/workflows/backend-ci.yml
     secrets: inherit
 
   call_frontend_ci:
     name: Run Frontend CI
     needs: check_paths
     if: needs.check_paths.outputs.frontend == 'true'
-    uses: ./.github/workflows/frontend-jobs.yml
+    uses: ./.github/workflows/frontend-ci.yml
     secrets: inherit
