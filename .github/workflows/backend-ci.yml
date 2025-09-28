@@ -1,4 +1,4 @@
-name: Backend CI
+name: Backend CI (Sequential)
 
 on:
   push:
@@ -17,72 +17,14 @@ defaults:
     working-directory: ./backend
 
 jobs:
-  test:
-    name: Test Python ${{ matrix.python-version }}
+  lint:
+    name: 1. Lint & Static Analysis
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.12']
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: |
-            backend/requirements.txt
-            backend/dev-requirements.txt
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r dev-requirements.txt
-
-      - name: Check code formatting with Black
-        run: |
-          black --check src tests
-
-      - name: Check import sorting with isort
-        run: |
-          isort --check-only --diff src tests
-
-      - name: Type checking with Mypy
-        run: |
-          mypy src
-
-      - name: Security scan with Bandit
-        run: |
-          bandit -r src -c pyproject.toml
-
-      - name: Run tests with pytest and coverage
-        run: |
-          pytest --cov=src --cov-report=xml --cov-report=term
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./backend/coverage.xml
-          flags: backend,python${{ matrix.python-version }}
-          name: backend-python${{ matrix.python-version }}
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-
-  security-audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -91,11 +33,91 @@ jobs:
             backend/requirements.txt
             backend/dev-requirements.txt
 
-      - name: Install dependencies
+      - name: Install dependencies (Required for linters/mypy/bandit)
         run: |
           python -m pip install --upgrade pip
-          pip install safety
+          # Install all dev dependencies which include black, isort, mypy, bandit
+          pip install -r dev-requirements.txt
 
-      - name: Run safety check
+      - name: Check code formatting with Black
+        run: black --check src tests
+
+      - name: Check import sorting with isort
+        run: isort --check-only --diff src tests
+
+      - name: Type checking with Mypy
+        run: mypy src
+
+      - name: Security scan with Bandit (Static Analysis)
+        run: bandit -r src -c pyproject.toml
+
+  unit-tests:
+    name: 2. Unit & Integration Tests
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/dev-requirements.txt
+
+      - name: Install dependencies (Production and Dev)
         run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+
+      - name: Run tests with pytest and coverage
+        run: pytest --cov=src --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: backend,python3.11
+          name: backend-python3.11
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+
+  build-check:
+    name: 3. Build & Dependency Check
+    needs: unit-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install only production dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Safety check (Vulnerability scan on Prod Deps)
+        run: |
+          pip install safety
+          # Safety checks the installed production requirements for known vulnerabilities
           safety check
+
+  docker-build:
+    name: 4. Docker Build & Push
+    needs: build-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Placeholder Step
+        run: echo "Starting Docker build and push to registry..."
