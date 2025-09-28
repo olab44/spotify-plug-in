@@ -1,4 +1,4 @@
-name: Frontend CI
+name: Frontend CI (Sequential)
 
 on:
   push:
@@ -17,8 +17,8 @@ defaults:
     working-directory: ./frontend
 
 jobs:
-  test:
-    name: Test and Build
+  lint-analysis:
+    name: 1. Lint & Static Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -42,37 +42,78 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check code formatting
-        run: |
-          bunx prettier --check "src/**/*.{ts,tsx}"
+      - name: Check code formatting (Prettier --check)
+        run: bunx prettier --check "src/**/*.{ts,tsx}"
 
       - name: Lint with ESLint
-        run: |
-          bun run lint
+        run: bun run lint
 
-      - name: Type check
-        run: |
-          bun run type-check
+      - name: Type check (TypeScript)
+        run: bun run type-check
+
+  unit-tests:
+    name: 2. Unit & Integration Tests
+    needs: lint-analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Restore dependencies Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            frontend/node_modules
+            frontend/.eslintcache
+          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
 
       - name: Run tests with coverage
-        run: |
-          bun run test:ci
-
-      - name: Build production bundle
-        run: |
-          bun run build
+        run: bun run test:ci
 
       - name: Upload test coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          file: ./frontend/coverage/coverage-final.json
+          file: ./coverage/coverage-final.json
           flags: frontend
           name: frontend
           fail_ci_if_error: true
 
-  security:
-    name: Security Scan
+  build-check:
+    name: 3. Build Check
+    needs: unit-tests
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Restore dependencies Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            frontend/node_modules
+            frontend/.eslintcache
+          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Build production bundle
+        run: bun run build
+
+  dependency-audit:
+    name: 4. Dependency & Security Audit
+    needs: build-check
+    runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./frontend
@@ -80,15 +121,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package.json
 
+      - name: Install dependencies (with npm to support npm audit)
+        run: npm ci
+
       - name: Run npm audit
         run: npm audit
 
-      - name: Check for outdated dependencies
+      - name: Check for outdated dependencies (Non-critical check)
         run: npm outdated || true
+
+  docker-build:
+    name: 5. Docker Build & Push
+    needs: dependency-audit
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Placeholder Step
+        run: echo "Starting Docker build and push to registry for frontend..."
