@@ -161,9 +161,7 @@ async def _process_uncached_track(track_data: Tuple) -> Tuple[str, Dict]:
     except aiohttp.ClientResponseError as e:
         logger.warning(f"Failed to fetch lyrics for {track_name}: {e}")
     except Exception as e:
-        logger.error(
-            f"An unexpected error occurred for {track_name}: {e}", exc_info=True
-        )
+        logger.error(f"An unexpected error occurred for {track_name}: {e}", exc_info=True)
 
     text = lyrics or f"{track_name} {artist_names} {album_name}".strip()
 
@@ -200,9 +198,7 @@ async def get_language_stats(track_stream: AsyncIterable[Dict]) -> LanguageStats
     cached_results = await redis_client.mget(track_ids)
 
     uncached_tracks: List[Tuple] = []
-    language_counts = defaultdict(
-        lambda: {"count": 0, "confidence_sum": 0.0, "examples": []}
-    )
+    language_counts = defaultdict(lambda: {"count": 0, "confidence_sum": 0.0, "examples": []})
 
     for i, track in enumerate(all_tracks):
         track_id = track.get("id") or track.get("uri")
@@ -222,9 +218,7 @@ async def get_language_stats(track_stream: AsyncIterable[Dict]) -> LanguageStats
             logger.debug(f"Track {track_id} not in cache. Will process.")
 
     if uncached_tracks:
-        logger.info(
-            f"Processing {len(uncached_tracks)} uncached tracks concurrently..."
-        )
+        logger.info(f"Processing {len(uncached_tracks)} uncached tracks concurrently...")
         processed_uncached = await asyncio.gather(
             *[_process_uncached_track(t) for t in uncached_tracks]
         )

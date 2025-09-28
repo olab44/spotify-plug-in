@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from src.login.service import get_current_user
 
 from .service import create_or_update_dynamic_playlist
@@ -27,6 +28,4 @@ def create_dynamic_playlist_endpoint(user: dict = Depends(get_current_user)):
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create/update playlist: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create/update playlist: {e}")

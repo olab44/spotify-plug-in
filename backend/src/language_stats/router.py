@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from src.login.service import get_current_user
 
 from .dal import stream_playlist_tracks, stream_saved_tracks
@@ -23,9 +24,7 @@ async def get_stats(
 
     if scope == "playlist":
         if not playlist_id:
-            raise HTTPException(
-                status_code=400, detail="playlist_id required for scope=playlist"
-            )
+            raise HTTPException(status_code=400, detail="playlist_id required for scope=playlist")
         track_stream = stream_playlist_tracks(playlist_id, token)
     else:
         track_stream = stream_saved_tracks(token)
@@ -37,6 +36,4 @@ async def get_stats(
         return stats
     except Exception as e:
         logger.error(f"Failed to compute language stats: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to compute language stats: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to compute language stats: {e}")

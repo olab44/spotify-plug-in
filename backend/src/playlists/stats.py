@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 import requests
+
 from src.config.constants import SPOTIFY_API_BASE_URL
 from src.top_tracks.service import get_top_tracks
 
@@ -30,9 +31,7 @@ def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
 
         song_genres = []
         for track in tracks:
-            primary_artist = (
-                track.get("artists", [])[0] if track.get("artists") else None
-            )
+            primary_artist = track.get("artists", [])[0] if track.get("artists") else None
 
             if primary_artist and primary_artist["id"] in artist_genres_map:
                 genres_for_artist = artist_genres_map[primary_artist["id"]]
@@ -56,9 +55,7 @@ def get_playlist_stats(access_token: str, playlist_id: str) -> Optional[Dict]:
 
         user_top_tracks = get_top_tracks(access_token, "long-term")
         if user_top_tracks:
-            stats["tasteSimilarity"] = calculate_taste_similarity(
-                tracks, user_top_tracks
-            )
+            stats["tasteSimilarity"] = calculate_taste_similarity(tracks, user_top_tracks)
         return stats
 
     except Exception as e:
@@ -110,13 +107,9 @@ def parse_release_date(date_str: str):
 
     try:
         if len(date_str) == 4:
-            return datetime.strptime(date_str, "%Y").replace(
-                month=1, day=1, tzinfo=timezone.utc
-            )
+            return datetime.strptime(date_str, "%Y").replace(month=1, day=1, tzinfo=timezone.utc)
         elif len(date_str) == 7:
-            return datetime.strptime(date_str, "%Y-%m").replace(
-                day=1, tzinfo=timezone.utc
-            )
+            return datetime.strptime(date_str, "%Y-%m").replace(day=1, tzinfo=timezone.utc)
         elif len(date_str) == 10:
             return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
         else:
@@ -161,19 +154,11 @@ def calculate_release_year_stats(tracks: List[Dict]) -> Dict:
         "avgReleaseYear": sum(release_years) / len(release_years),
         "oldestTrack": {
             "name": oldest_track_data.get("name", "Unknown"),
-            "year": int(
-                oldest_track_data.get("album", {})
-                .get("release_date", "0")
-                .split("-")[0]
-            ),
+            "year": int(oldest_track_data.get("album", {}).get("release_date", "0").split("-")[0]),
         },
         "newestTrack": {
             "name": newest_track_data.get("name", "Unknown"),
-            "year": int(
-                newest_track_data.get("album", {})
-                .get("release_date", "0")
-                .split("-")[0]
-            ),
+            "year": int(newest_track_data.get("album", {}).get("release_date", "0").split("-")[0]),
         },
         "histogram": dict(year_histogram),
     }
@@ -257,9 +242,7 @@ def calculate_hits_vs_gems(tracks: List[Dict]) -> Dict:
     }
 
 
-def calculate_taste_similarity(
-    playlist_tracks: List[Dict], user_top_tracks: List[Dict]
-) -> float:
+def calculate_taste_similarity(playlist_tracks: List[Dict], user_top_tracks: List[Dict]) -> float:
     if not playlist_tracks or not user_top_tracks:
         return 0.0
     playlist_ids = {track["id"] for track in playlist_tracks if "id" in track}

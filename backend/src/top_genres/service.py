@@ -2,6 +2,7 @@ from collections import Counter
 from typing import Dict, List, Optional
 
 import requests
+
 from src.top_artists.service import get_top_artists as get_raw_top_artists
 
 TIME_RANGES = {
@@ -43,8 +44,7 @@ def get_top_genres(
 
         genre_counts = Counter(all_genres)
         sorted_genres = [
-            {"genre": genre, "count": count}
-            for genre, count in genre_counts.most_common(10)
+            {"genre": genre, "count": count} for genre, count in genre_counts.most_common(10)
         ]
 
         return sorted_genres

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 from fastapi import HTTPException
+
 from src.config.constants import SPOTIFY_API_BASE_URL
 
 PLAYLIST_NAME = "My Top 20: 24h Hits"
@@ -31,9 +32,7 @@ def create_or_update_dynamic_playlist(access_token: str):
 
 def find_existing_playlist(access_token: str, headers: dict) -> str | None:
     try:
-        user_id = requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers).json()[
-            "id"
-        ]
+        user_id = requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers).json()["id"]
         response = requests.get(
             f"{SPOTIFY_API_BASE_URL}/users/{user_id}/playlists", headers=headers
         )
@@ -52,9 +51,7 @@ def find_existing_playlist(access_token: str, headers: dict) -> str | None:
 
 def create_new_playlist(access_token: str, headers: dict) -> str:
     try:
-        user_id = requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers).json()[
-            "id"
-        ]
+        user_id = requests.get(f"{SPOTIFY_API_BASE_URL}/me", headers=headers).json()["id"]
         payload = {
             "name": PLAYLIST_NAME,
             "description": "Your most listened-to songs from the last 24 hours. Automatically updated!",
@@ -76,9 +73,7 @@ def create_new_playlist(access_token: str, headers: dict) -> str:
 
 def get_recently_played_tracks(access_token: str, headers: dict) -> list:
     all_tracks = []
-    timestamp_24h_ago = int(
-        (datetime.now(timezone.utc) - timedelta(hours=24)).timestamp() * 1000
-    )
+    timestamp_24h_ago = int((datetime.now(timezone.utc) - timedelta(hours=24)).timestamp() * 1000)
 
     params = {"limit": 50, "after": timestamp_24h_ago}
     try:

@@ -1,6 +1,7 @@
 import requests
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from src.config.constants import (
     DEFAULT_SCOPES,
     SPOTIFY_API_BASE_URL,
@@ -67,8 +68,6 @@ oauth2_scheme = HTTPBearer()
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme)):
     """Dependency to get the current user's token from a bearer token."""
     if not token.credentials:
-        raise HTTPException(
-            status_code=401, detail="Not authenticated: No bearer token provided"
-        )
+        raise HTTPException(status_code=401, detail="Not authenticated: No bearer token provided")
 
     return {"access_token": token.credentials}

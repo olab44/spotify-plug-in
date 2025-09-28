@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
+
 from src.login.schemas import SpotifyUser
 from src.login.service import (
     get_current_user,
@@ -41,15 +42,11 @@ def get_user_info(user: dict = Depends(get_current_user)):
     """Fetches and returns the current user's profile information."""
     access_token = user.get("access_token")
     if not access_token:
-        raise HTTPException(
-            status_code=401, detail="Access token missing in user dependency"
-        )
+        raise HTTPException(status_code=401, detail="Access token missing in user dependency")
     try:
         user_info = get_spotify_user_info(access_token)
         return user_info
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch user info from Spotify: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch user info from Spotify: {e}")

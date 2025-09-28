@@ -34,13 +34,9 @@ def recommend_languages(
 ) -> LanguageRecommendationResponse:
     interests = analyze_user_interests(request.user_id)
     genres = ["Pop", "Rock", "Jazz"]
-    podcasts = [
-        pod for lang in request.languages for pod in fetch_podcasts(interests, lang)
-    ]
+    podcasts = [pod for lang in request.languages for pod in fetch_podcasts(interests, lang)]
     music_tracks = [
-        track
-        for lang in request.languages
-        for track in fetch_music_tracks(genres, lang)
+        track for lang in request.languages for track in fetch_music_tracks(genres, lang)
     ]
 
     # Combine interests and genres for similarity
