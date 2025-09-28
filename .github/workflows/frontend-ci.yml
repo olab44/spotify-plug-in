@@ -1,4 +1,4 @@
-name: Frontend CI
+name: Frontend CI (Sequential)
 
 on:
   push:
@@ -17,17 +17,19 @@ defaults:
     working-directory: ./frontend
 
 jobs:
-  lint-analysis:
-    name: lint
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -35,34 +37,34 @@ jobs:
           path: |
             frontend/node_modules
             frontend/.eslintcache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lockb') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-bun-
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Check code formatting (Prettier --check)
-        run: bunx prettier --check "src/**/*.{ts,tsx}"
+        run: npx prettier --check "src/**/*.{ts,tsx}"
 
       - name: Lint with ESLint
-        run: bun run lint
+        run: npm run lint
 
       - name: Type check (TypeScript)
-        run: bun run type-check
+        run: npm run type-check
 
   unit-tests:
-    name: unit-tests
-    needs: lint-analysis
+    name: unit tests
+    needs: lint
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '20'
 
       - name: Restore dependencies Cache
         uses: actions/cache/restore@v4
@@ -70,11 +72,11 @@ jobs:
           path: |
             frontend/node_modules
             frontend/.eslintcache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lockb') }}
-          restore-keys: ${{ runner.os }}-bun-
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
 
       - name: Run tests with coverage
-        run: bun run test:ci
+        run: npm run test:ci
 
       - name: Upload test coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -92,10 +94,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '20'
 
       - name: Restore dependencies Cache
         uses: actions/cache/restore@v4
@@ -103,11 +105,11 @@ jobs:
           path: |
             frontend/node_modules
             frontend/.eslintcache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lockb') }}
-          restore-keys: ${{ runner.os }}-bun-
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
 
       - name: Build production bundle
-        run: bun run build
+        run: npm run build
 
   dependency-audit:
     name: dependency-audit
@@ -128,7 +130,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package.json
 
-      - name: Install dependencies (with npm to support npm audit)
+      - name: Install dependencies (with npm ci)
         run: npm ci
 
       - name: Run npm audit
@@ -144,5 +146,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20 (for consistency)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Placeholder Step
         run: echo "Starting Docker build and push to registry for frontend..."
