@@ -1,0 +1,51 @@
+name: Pipeline
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/main-pipeline.yml'
+      - '.github/workflows/backend-jobs.yml'
+      - '.github/workflows/frontend-jobs.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/main-pipeline.yml'
+      - '.github/workflows/backend-jobs.yml'
+      - '.github/workflows/frontend-jobs.yml'
+  workflow_dispatch:
+
+jobs:
+  check_paths:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine if frontend or backend code changed
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  call_backend_ci:
+    name: Run Backend CI
+    needs: check_paths
+    if: needs.check_paths.outputs.backend == 'true'
+    uses: ./.github/workflows/backend-jobs.yml
+    secrets: inherit
+
+  call_frontend_ci:
+    name: Run Frontend CI
+    needs: check_paths
+    if: needs.check_paths.outputs.frontend == 'true'
+    uses: ./.github/workflows/frontend-jobs.yml
+    secrets: inherit
