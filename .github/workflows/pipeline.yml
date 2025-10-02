@@ -7,16 +7,12 @@ on:
       - 'frontend/**'
       - 'backend/**'
       - '.github/workflows/pipeline.yml'
-      - '.github/workflows/backend-ci.yml'
-      - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [main, master]
     paths:
       - 'frontend/**'
       - 'backend/**'
       - '.github/workflows/pipeline.yml'
-      - '.github/workflows/backend-ci.yml'
-      - '.github/workflows/frontend-ci.yml'
   workflow_dispatch:
 
 jobs:
@@ -27,8 +23,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
-      - name: Determine if frontend or backend code changed
-        id: filter
+      - id: filter
         uses: dorny/paths-filter@v3
         with:
           filters: |
@@ -37,16 +32,12 @@ jobs:
             frontend:
               - 'frontend/**'
 
-  call_backend_ci:
-    name: Run Backend CI
-    needs: check_paths
-    if: needs.check_paths.outputs.backend == 'true'
-    uses: ./.github/workflows/backend-ci.yml
-    secrets: inherit
-
-  call_frontend_ci:
-    name: Run Frontend CI
+  frontend:
     needs: check_paths
     if: needs.check_paths.outputs.frontend == 'true'
-    uses: ./.github/workflows/frontend-ci.yml
-    secrets: inherit
+    uses: ./.github/workflows/frontend.yml
+
+  backend:
+    needs: check_paths
+    if: needs.check_paths.outputs.backend == 'true'
+    uses: ./.github/workflows/backend.yml

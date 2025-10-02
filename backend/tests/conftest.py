@@ -2,13 +2,9 @@ import asyncio
 from typing import AsyncGenerator, Generator
 
 import pytest
-from fakeredis import aioredis
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
-
-from src.config.database import get_redis_client
-from src.dependencies import get_current_user
 from src.main import app
 
 TEST_USER = {
@@ -46,27 +42,6 @@ async def async_client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client for the FastAPI application."""
     async with AsyncClient(app=test_app, base_url="http://test") as client:
         yield client
-
-
-@pytest.fixture
-def mock_redis():
-    """Create a mock Redis client."""
-    redis = aioredis.FakeRedis()
-    app.dependency_overrides[get_redis_client] = lambda: redis
-    yield redis
-    app.dependency_overrides.pop(get_redis_client, None)
-
-
-@pytest.fixture
-def mock_current_user():
-    """Mock the current user dependency."""
-
-    async def override_get_current_user():
-        return TEST_USER
-
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    yield TEST_USER
-    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture

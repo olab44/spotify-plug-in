@@ -1,16 +1,7 @@
 name: Frontend CI (Sequential)
 
 on:
-  push:
-    branches: [main, master]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
-  pull_request:
-    branches: [main, master]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+  workflow_call:
 
 defaults:
   run:
