@@ -1,15 +1,13 @@
 fastapi==0.115.5
-starlette==0.47.2
 uvicorn==0.30.6
 httpx==0.28.1
 requests==2.32.3
 python-dotenv==1.0.0
 fastapi-security==0.5.0
-fastapi-jwt-auth==0.5.0
 fastapi-cors==0.0.6
 fastapi-utils==0.2.1
 langdetect==1.0.9
-sqlalchemy==2.0.36
+sqlalchemy==1.4.49
 psycopg2-binary==2.9.7
 alembic==1.13.2
 asyncpg==0.30.0
@@ -22,4 +20,5 @@ langid==1.1.6
 bandit==1.7.9
 h11==0.16.0
 anyio==4.4.0
-pyjwt==2.9.0
+pyjwt==1.7.1
+fastapi-jwt-auth==0.5.0
