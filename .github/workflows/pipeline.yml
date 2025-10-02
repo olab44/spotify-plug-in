@@ -35,3 +35,15 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+
+  frontend:
+    name: frontend-ci
+    needs: check_paths
+    if: needs.check_paths.outputs.frontend == 'true'
+    uses: ./.github/workflows/frontend-ci.yml
+
+  backend:
+    name: backend-ci
+    needs: check_paths
+    if: needs.check_paths.outputs.backend == 'true'
+    uses: ./.github/workflows/backend-ci.yml
