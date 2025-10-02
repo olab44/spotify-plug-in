@@ -12,6 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from src.config.database import Base
 
 
@@ -59,9 +60,7 @@ class Artist(Base):
 class ArtistGenre(Base):
     __tablename__ = "artist_genres"
 
-    artist_id = Column(
-        Integer, ForeignKey("artists.id", ondelete="CASCADE"), primary_key=True
-    )
+    artist_id = Column(Integer, ForeignKey("artists.id", ondelete="CASCADE"), primary_key=True)
     genre = Column(String(255), primary_key=True)
 
     # Relationship
@@ -96,12 +95,8 @@ class Track(Base):
 class TrackArtist(Base):
     __tablename__ = "track_artists"
 
-    track_id = Column(
-        Integer, ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True
-    )
-    artist_id = Column(
-        Integer, ForeignKey("artists.id", ondelete="CASCADE"), primary_key=True
-    )
+    track_id = Column(Integer, ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True)
+    artist_id = Column(Integer, ForeignKey("artists.id", ondelete="CASCADE"), primary_key=True)
     is_primary = Column(Boolean, default=False)
 
     # Relationships
@@ -146,12 +141,8 @@ class Playlist(Base):
 class PlaylistTrack(Base):
     __tablename__ = "playlist_tracks"
 
-    playlist_id = Column(
-        Integer, ForeignKey("playlists.id", ondelete="CASCADE"), primary_key=True
-    )
-    track_id = Column(
-        Integer, ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True
-    )
+    playlist_id = Column(Integer, ForeignKey("playlists.id", ondelete="CASCADE"), primary_key=True)
+    track_id = Column(Integer, ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True)
     position = Column(Integer, nullable=False)
     added_at = Column(DateTime, server_default=func.now())
     added_by_id = Column(Integer, ForeignKey("users.id"))

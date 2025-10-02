@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, List, Optional, cast
 
 import requests
 from src.config.constants import SPOTIFY_API_BASE_URL
@@ -12,18 +12,8 @@ TIME_RANGES = {
 
 def get_top_tracks(
     access_token: str, time_range: str = "medium-term", limit: int = 50
-) -> Optional[list]:
-    """
-    Get user's top tracks for a given time range.
+) -> Optional[List[Dict[str, Any]]]:
 
-    Args:
-        access_token: Spotify access token
-        time_range: Time range for top tracks (short-term, medium-term, or long-term)
-        limit: Number of tracks to return (max 50)
-
-    Returns:
-        List of track objects or None if request fails
-    """
     if not access_token:
         return None
 
@@ -34,14 +24,14 @@ def get_top_tracks(
 
     spotify_time_range = TIME_RANGES[time_range]
     headers = {"Authorization": f"Bearer {access_token}"}
-    params = {"time_range": spotify_time_range, "limit": limit}
+    params: dict[str, str | int] = {"time_range": spotify_time_range, "limit": limit}
 
     try:
         response = requests.get(
-            f"{SPOTIFY_API_BASE_URL}/me/top/tracks", headers=headers, params=params
+            f"{SPOTIFY_API_BASE_URL}/me/top/tracks", headers=headers, params=params, timeout=10
         )
         response.raise_for_status()
-        return response.json()["items"]
+        return cast(List[Dict[str, Any]], response.json()["items"])
     except requests.exceptions.HTTPError as e:
         print(f"Error fetching top tracks: {e}")
         return None

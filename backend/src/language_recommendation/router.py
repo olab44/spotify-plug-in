@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.post("/recommend", response_model=LanguageRecommendationResponse)
-def recommend(request: LanguageRecommendationRequest):
+def recommend(request: LanguageRecommendationRequest) -> LanguageRecommendationResponse:
     try:
         response = recommend_languages(request)
         return response

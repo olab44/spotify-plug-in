@@ -12,7 +12,7 @@ def get_top_genres_for_period(
         ..., description="Time range for top genres", regex="^(short|medium|long)-term$"
     ),
     user: dict = Depends(get_current_user),
-):
+) -> list:
     access_token = user.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")

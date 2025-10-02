@@ -96,7 +96,6 @@ LANGUAGE_NAMES = {
 
 
 def finalize_stats(language_counts: Dict[str, dict], top_n: int = 5) -> LanguageStats:
-    """Calculates final language stats including percentages, entropy, and diversity score."""
     total = language_counts.get("__total__", {}).get("count", 0)
     langs = []
     for lang_code, data in language_counts.items():
@@ -141,17 +140,18 @@ def finalize_stats(language_counts: Dict[str, dict], top_n: int = 5) -> Language
 
 def _get_track_data(track: Dict[str, Any]) -> Tuple[str, str, str, str]:
     """Helper to extract relevant data from a track object. Now a synchronous function."""
-    track_id = track.get("id") or track.get("uri")
-    artist_names = " ".join([a.get("name", "") for a in track.get("artists", [])])
-    track_name = track.get("name", "")
-    album_name = track.get("album", {}).get("name", "")
+    track_id = str(track.get("id") or track.get("uri") or "")
+    artist_names = " ".join(
+        [str(a.get("name", "")) for a in track.get("artists", []) if a and a.get("name")]
+    )
+    track_name = str(track.get("name", ""))
+    album_name = str(track.get("album", {}).get("name", ""))
     return track_id, track_name, artist_names, album_name
 
 
-async def _process_uncached_track(track_data: Tuple) -> Tuple[str, Dict]:
+async def _process_uncached_track(track_data: Tuple[str, str, str, str]) -> Tuple[str, Dict]:
     """
     Fetches lyrics and detects language for a single uncached track.
-    This runs in the asyncio event loop.
     """
     track_id, track_name, artist_names, album_name = track_data
     lyrics = None
@@ -161,9 +161,7 @@ async def _process_uncached_track(track_data: Tuple) -> Tuple[str, Dict]:
     except aiohttp.ClientResponseError as e:
         logger.warning(f"Failed to fetch lyrics for {track_name}: {e}")
     except Exception as e:
-        logger.error(
-            f"An unexpected error occurred for {track_name}: {e}", exc_info=True
-        )
+        logger.error(f"An unexpected error occurred for {track_name}: {e}", exc_info=True)
 
     text = lyrics or f"{track_name} {artist_names} {album_name}".strip()
 
@@ -171,15 +169,15 @@ async def _process_uncached_track(track_data: Tuple) -> Tuple[str, Dict]:
     lang, conf = await loop.run_in_executor(process_pool, _detect_language_langid, text)
 
     result = {"language": lang, "confidence": conf}
-    await redis_client.set(track_id, json.dumps(result))
-    logger.debug(f"Detected language {lang} for {track_name} and cached.")
+    if track_id:
+        await redis_client.set(track_id, json.dumps(result))
+        logger.debug(f"Detected language {lang} for {track_name} and cached.")
     return track_id, result
 
 
 def _detect_language_langid(text: str) -> Tuple[str, float]:
     """
     Performs language detection using langid.
-    This runs in a separate process via ProcessPoolExecutor.
     """
     if not text:
         return "unknown", 0.0
@@ -195,47 +193,58 @@ def _detect_language_langid(text: str) -> Tuple[str, float]:
 async def get_language_stats(track_stream: AsyncIterable[Dict]) -> LanguageStats:
     logger.info("Starting language stats pipeline...")
     all_tracks = [track async for track in track_stream]
-    track_ids = [t.get("id") or t.get("uri") for t in all_tracks]
 
-    cached_results = await redis_client.mget(track_ids)
+    track_id_map: Dict[str, Dict] = {}
+    for track in all_tracks:
+        track_id = track.get("id") or track.get("uri")
+        if track_id:
+            track_id_map[str(track_id)] = track
 
-    uncached_tracks: List[Tuple] = []
-    language_counts = defaultdict(
+    redis_keys = list(track_id_map.keys())
+
+    cached_results_raw = await redis_client.mget(redis_keys)
+
+    language_counts: Dict[str, Dict[str, Any]] = defaultdict(
         lambda: {"count": 0, "confidence_sum": 0.0, "examples": []}
     )
 
-    for i, track in enumerate(all_tracks):
-        track_id = track.get("id") or track.get("uri")
-        cached_data = cached_results[i]
+    uncached_track_tuples: List[Tuple[str, str, str, str]] = []
+
+    for i, key in enumerate(redis_keys):
+        track = track_id_map[key]
+        cached_data = cached_results_raw[i]
 
         if cached_data:
             data = json.loads(cached_data)
             lang, conf = data["language"], data["confidence"]
+
             entry = language_counts[lang]
-            entry["count"] += 1
-            entry["confidence_sum"] += conf
+            entry["count"] = int(entry["count"]) + 1
+            entry["confidence_sum"] = float(entry["confidence_sum"]) + float(conf)
             if len(entry["examples"]) < 3:
                 entry["examples"].append(track.get("name", "Unknown"))
-            logger.debug(f"Track {track_id} found in cache. Language: {lang}")
+            logger.debug(f"Track {key} found in cache. Language: {lang}")
         else:
-            uncached_tracks.append(_get_track_data(track))
-            logger.debug(f"Track {track_id} not in cache. Will process.")
+            uncached_track_tuples.append(_get_track_data(track))
+            logger.debug(f"Track {key} not in cache. Will process.")
 
-    if uncached_tracks:
-        logger.info(
-            f"Processing {len(uncached_tracks)} uncached tracks concurrently..."
-        )
+    if uncached_track_tuples:
+        logger.info(f"Processing {len(uncached_track_tuples)} uncached tracks concurrently...")
+
         processed_uncached = await asyncio.gather(
-            *[_process_uncached_track(t) for t in uncached_tracks]
+            *[_process_uncached_track(t) for t in uncached_track_tuples]
         )
 
-        for (track_id, track_name, _, _), (_, result_dict) in zip(
-            uncached_tracks, processed_uncached
+        for track_data_tuple, (track_id, result_dict) in zip(
+            uncached_track_tuples, processed_uncached
         ):
+            _, track_name, _, _ = track_data_tuple
+
             lang, conf = result_dict["language"], result_dict["confidence"]
+
             entry = language_counts[lang]
-            entry["count"] += 1
-            entry["confidence_sum"] += conf
+            entry["count"] = int(entry["count"]) + 1
+            entry["confidence_sum"] = float(entry["confidence_sum"]) + float(conf)
             if len(entry["examples"]) < 3:
                 entry["examples"].append(track_name)
 

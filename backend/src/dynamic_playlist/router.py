@@ -6,8 +6,8 @@ from .service import create_or_update_dynamic_playlist
 router = APIRouter(tags=["dynamic_playlist"])
 
 
-@router.post("/create")
-def create_dynamic_playlist_endpoint(user: dict = Depends(get_current_user)):
+@router.get("/dynamic-playlist")
+def dynamic_playlist(user: dict = Depends(get_current_user)) -> dict[str, str]:
     """
     Creates or updates a dynamic playlist with the top 20 most listened-to songs
     from the last 24 hours for the current user.
@@ -27,6 +27,4 @@ def create_dynamic_playlist_endpoint(user: dict = Depends(get_current_user)):
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create/update playlist: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create/update playlist: {e}")
