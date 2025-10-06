@@ -64,10 +64,5 @@ async def stream_all_user_tracks(token: str) -> AsyncIterator[Dict[str, Any]]:
         playlist_id = playlist.get("id")
 
         if playlist_id:
-            try:
-                async for track in stream_playlist_tracks(playlist_id, token):
-                    yield track
-            except aiohttp.ClientResponseError:
-                pass
-            except Exception:
-                pass
+            async for track in stream_playlist_tracks(playlist_id, token):
+                yield track

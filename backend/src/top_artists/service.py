@@ -22,7 +22,7 @@ def get_user_playlists(access_token: str) -> Optional[List[Dict[str, Any]]]:
     playlists = []
     url = f"{SPOTIFY_API_BASE_URL}/me/playlists"
     while url:
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, timeout=10)
         if resp.status_code != 200:
             return None
         data = resp.json()
@@ -37,7 +37,7 @@ def get_playlist_tracks(access_token: str, playlist_id: str) -> List[Dict[str, A
     tracks = []
     url = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
     while url:
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, timeout=10)
         if resp.status_code != 200:
             break
         data = resp.json()
