@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException
 from src.language_stats.dal import stream_playlist_tracks
 from src.login.service import get_current_user
@@ -8,10 +6,9 @@ from .processor_optimized import get_language_stats
 from .schemas import LanguageStats
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
-@router.get("/{playlist_id}")
+@router.get("/stats")
 async def get_language_stats_for_playlist(
     playlist_id: str, user: dict = Depends(get_current_user)
 ) -> LanguageStats:
@@ -21,14 +18,11 @@ async def get_language_stats_for_playlist(
 
     if not playlist_id:
         raise HTTPException(status_code=400, detail="No playlist ID provided")
-
     track_stream = stream_playlist_tracks(playlist_id, token)
 
     try:
-        logger.info(f"Starting language stats computation for playlist ID: {playlist_id}")
         stats = await get_language_stats(track_stream)
-        logger.info(f"Successfully computed language stats for playlist ID: {playlist_id}")
         return stats
+
     except Exception as e:
-        logger.error(f"Failed to compute language stats: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to compute language stats: {e}")

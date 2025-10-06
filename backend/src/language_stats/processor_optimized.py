@@ -10,6 +10,7 @@ import aiohttp
 import langid
 from redis.asyncio import Redis, from_url
 
+from .language_names import LANGUAGE_NAMES
 from .lyrics import fetch_lyrics
 from .schemas import LanguageCount, LanguageStats
 
@@ -18,81 +19,6 @@ logger = logging.getLogger(__name__)
 
 process_pool = ProcessPoolExecutor()
 redis_client: Redis = from_url("redis://redis:6379")
-
-
-LANGUAGE_NAMES = {
-    "en": "English",
-    "pl": "Polish",
-    "de": "German",
-    "es": "Spanish",
-    "fr": "French",
-    "it": "Italian",
-    "ja": "Japanese",
-    "ko": "Korean",
-    "zh": "Chinese",
-    "ru": "Russian",
-    "pt": "Portuguese",
-    "sv": "Swedish",
-    "nl": "Dutch",
-    "tr": "Turkish",
-    "ar": "Arabic",
-    "hi": "Hindi",
-    "id": "Indonesian",
-    "uk": "Ukrainian",
-    "ro": "Romanian",
-    "hu": "Hungarian",
-    "cs": "Czech",
-    "fi": "Finnish",
-    "da": "Danish",
-    "no": "Norwegian",
-    "el": "Greek",
-    "th": "Thai",
-    "vi": "Vietnamese",
-    "he": "Hebrew",
-    "ms": "Malay",
-    "ca": "Catalan",
-    "sk": "Slovak",
-    "bg": "Bulgarian",
-    "hr": "Croatian",
-    "sl": "Slovenian",
-    "sr": "Serbian",
-    "lt": "Lithuanian",
-    "lv": "Latvian",
-    "et": "Estonian",
-    "is": "Icelandic",
-    "ga": "Irish",
-    "sq": "Albanian",
-    "mk": "Macedonian",
-    "mt": "Maltese",
-    "tl": "Tagalog",
-    "ur": "Urdu",
-    "fa": "Persian",
-    "ne": "Nepali",
-    "pa": "Punjabi",
-    "te": "Telugu",
-    "bn": "Bengali",
-    "gu": "Gujarati",
-    "kn": "Kannada",
-    "ml": "Malayalam",
-    "mr": "Marathi",
-    "ta": "Tamil",
-    "cy": "Welsh",
-    "gd": "Scottish Gaelic",
-    "gv": "Manx",
-    "mi": "Maori",
-    "unknown": "Unknown",
-    "af": "Afrikaans",
-    "eu": "Basque",
-    "wa": "Walloon",
-    "br": "Breton",
-    "an": "Aragonese",
-    "sw": "Swahili",
-    "xh": "Xhosa",
-    "nn": "Norwegian Nynorsk",
-    "ht": "Haitian Creole",
-    "fo": "Faroese",
-    "nb": "Norwegian Bokmål",
-}
 
 
 def finalize_stats(language_counts: Dict[str, dict], top_n: int = 5) -> LanguageStats:
@@ -139,7 +65,6 @@ def finalize_stats(language_counts: Dict[str, dict], top_n: int = 5) -> Language
 
 
 def _get_track_data(track: Dict[str, Any]) -> Tuple[str, str, str, str]:
-    """Helper to extract relevant data from a track object. Now a synchronous function."""
     track_id = str(track.get("id") or track.get("uri") or "")
     artist_names = " ".join(
         [str(a.get("name", "")) for a in track.get("artists", []) if a and a.get("name")]
@@ -150,9 +75,6 @@ def _get_track_data(track: Dict[str, Any]) -> Tuple[str, str, str, str]:
 
 
 async def _process_uncached_track(track_data: Tuple[str, str, str, str]) -> Tuple[str, Dict]:
-    """
-    Fetches lyrics and detects language for a single uncached track.
-    """
     track_id, track_name, artist_names, album_name = track_data
     lyrics = None
     try:
@@ -176,9 +98,7 @@ async def _process_uncached_track(track_data: Tuple[str, str, str, str]) -> Tupl
 
 
 def _detect_language_langid(text: str) -> Tuple[str, float]:
-    """
-    Performs language detection using langid.
-    """
+
     if not text:
         return "unknown", 0.0
 
@@ -191,7 +111,6 @@ def _detect_language_langid(text: str) -> Tuple[str, float]:
 
 
 async def get_language_stats(track_stream: AsyncIterable[Dict]) -> LanguageStats:
-    logger.info("Starting language stats pipeline...")
     all_tracks = [track async for track in track_stream]
 
     track_id_map: Dict[str, Dict] = {}
@@ -200,55 +119,66 @@ async def get_language_stats(track_stream: AsyncIterable[Dict]) -> LanguageStats
         if track_id:
             track_id_map[str(track_id)] = track
 
-    redis_keys = list(track_id_map.keys())
+    if not track_id_map:
+        return finalize_stats({"__total__": {"count": 0}})
 
+    redis_keys = list(track_id_map.keys())
     cached_results_raw = await redis_client.mget(redis_keys)
 
     language_counts: Dict[str, Dict[str, Any]] = defaultdict(
         lambda: {"count": 0, "confidence_sum": 0.0, "examples": []}
     )
-
     uncached_track_tuples: List[Tuple[str, str, str, str]] = []
 
     for i, key in enumerate(redis_keys):
-        track = track_id_map[key]
+        track = track_id_map.get(key)
         cached_data = cached_results_raw[i]
 
-        if cached_data:
-            data = json.loads(cached_data)
-            lang, conf = data["language"], data["confidence"]
+        track_name = track.get("name", "Unknown Track")
 
-            entry = language_counts[lang]
-            entry["count"] = int(entry["count"]) + 1
-            entry["confidence_sum"] = float(entry["confidence_sum"]) + float(conf)
-            if len(entry["examples"]) < 3:
-                entry["examples"].append(track.get("name", "Unknown"))
-            logger.debug(f"Track {key} found in cache. Language: {lang}")
+        if cached_data:
+            try:
+                data = json.loads(cached_data)
+                lang = data.get("language", "unknown")
+                conf = data.get("confidence", 0.0)
+
+                entry = language_counts[lang]
+                entry["count"] += 1
+                entry["confidence_sum"] += float(conf)
+                if len(entry["examples"]) < 3:
+                    entry["examples"].append(track_name)
+
+            except (json.JSONDecodeError, KeyError):
+                uncached_track_tuples.append(_get_track_data(track))
         else:
             uncached_track_tuples.append(_get_track_data(track))
-            logger.debug(f"Track {key} not in cache. Will process.")
 
     if uncached_track_tuples:
-        logger.info(f"Processing {len(uncached_track_tuples)} uncached tracks concurrently...")
-
         processed_uncached = await asyncio.gather(
-            *[_process_uncached_track(t) for t in uncached_track_tuples]
+            *[_process_uncached_track(t) for t in uncached_track_tuples], return_exceptions=True
         )
 
-        for track_data_tuple, (track_id, result_dict) in zip(
-            uncached_track_tuples, processed_uncached
-        ):
+        for track_data_tuple, result in zip(uncached_track_tuples, processed_uncached):
             _, track_name, _, _ = track_data_tuple
 
-            lang, conf = result_dict["language"], result_dict["confidence"]
+            lang, conf = "unknown", 0.0
+
+            if isinstance(result, Exception):
+                pass
+            elif result is None or not isinstance(result, tuple) or len(result) != 2:
+                pass
+            else:
+                _, result_dict = result
+                lang = result_dict.get("language", "unknown")
+                conf = result_dict.get("confidence", 0.0)
 
             entry = language_counts[lang]
-            entry["count"] = int(entry["count"]) + 1
-            entry["confidence_sum"] = float(entry["confidence_sum"]) + float(conf)
+            entry["count"] += 1
+            entry["confidence_sum"] += float(conf)
             if len(entry["examples"]) < 3:
                 entry["examples"].append(track_name)
 
     total = len(all_tracks)
     language_counts["__total__"] = {"count": total}
-    logger.info("Finalizing stats...")
+
     return finalize_stats(language_counts)

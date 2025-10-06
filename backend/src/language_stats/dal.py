@@ -11,12 +11,17 @@ async def _get_paginated(
     headers = {"Authorization": f"Bearer {token}"}
     next_url = url
     while next_url:
-        async with session.get(next_url, headers=headers) as resp:
-            resp.raise_for_status()
-            data = await resp.json()
-            items = data.get("items") or data.get("tracks", {}).get("items") or []
-            yield items
-            next_url = data.get("next")
+        try:
+            async with session.get(next_url, headers=headers) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
+                items = data.get("items") or data.get("tracks", {}).get("items") or []
+                yield items
+                next_url = data.get("next")
+        except aiohttp.ClientResponseError as e:
+            raise e
+        except Exception as e:
+            raise e
 
 
 async def stream_playlist_tracks(playlist_id: str, token: str) -> AsyncIterator[Dict[str, Any]]:
@@ -54,8 +59,15 @@ async def stream_all_user_tracks(token: str) -> AsyncIterator[Dict[str, Any]]:
     """Streams all tracks: saved tracks and tracks from all owned playlists."""
     async for track in stream_saved_tracks(token):
         yield track
+
     async for playlist in stream_user_playlists(token):
         playlist_id = playlist.get("id")
+
         if playlist_id:
-            async for track in stream_playlist_tracks(playlist_id, token):
-                yield track
+            try:
+                async for track in stream_playlist_tracks(playlist_id, token):
+                    yield track
+            except aiohttp.ClientResponseError:
+                pass
+            except Exception:
+                pass

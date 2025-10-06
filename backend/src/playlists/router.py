@@ -30,6 +30,7 @@ def get_playlist(
         data = get_playlist_data(access_token, playlist_id)
         if data is None:
             raise HTTPException(status_code=404, detail="Playlist not found or empty")
+
         return data
     except HTTPException as e:
         raise HTTPException(

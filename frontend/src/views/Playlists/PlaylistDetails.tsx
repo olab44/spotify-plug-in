@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
-import { Title } from '@/components/StyledComponents';
 import { TopStatsList } from '@/components/TopStatsList';
 import { TopStatsRow } from '@/components/TopStatsRow';
 import { Button } from '@/components/ui/button';
@@ -45,98 +44,149 @@ export const PlaylistDetails: React.FC = () => {
   return (
     <LeftPanelProvider>
       <LeftPanel />
-      <StatsContainer>
-        <Header>
-          <Button onClick={handleGoBack}>← Go Back to Playlists</Button>
-          <Title>
-            {playlistNameFromUrl || (typeof data?.name === 'string' ? data.name : 'Playlist')}
-          </Title>
-        </Header>
+      <Container>
+        <MainContent>
+          <Header>
+            <BackButton onClick={handleGoBack}>← Back to Playlists</BackButton>
+            <PlaylistTitle>
+              {playlistNameFromUrl || (typeof data?.name === 'string' ? data.name : 'Playlist')}
+            </PlaylistTitle>
+          </Header>
 
-        <ContentGrid>
-          <StatsPanel>
-            <Title>Playlist Stats</Title>
-            {data?.stats ? (
-              <PlaylistStats
-                stats={data.stats}
-                onRemoveDuplicates={handleRemoveDuplicates}
-                isRemoving={isRemoving}
-              />
-            ) : (
-              <p>No stats available for this playlist.</p>
-            )}
-          </StatsPanel>
-
-          <TracksPanel>
-            <Title>Playlist Tracks</Title>
-            <TopStatsList
-              items={data?.tracks?.map((item: any) => item.track) || []}
-              noDataMessage="No tracks found in this playlist."
-              loading={loading}
-              error={error}
-              renderRow={(track, idx) => (
-                <a
-                  key={track.id}
-                  href={track.external_urls.spotify}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
-                  <TopStatsRow
-                    rank={idx + 1}
-                    imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
-                    primaryText={track.name}
-                    secondaryText={track.artists.map((a: { name: string }) => a.name).join(', ')}
-                    tertiaryText={track.album.name}
-                  />
-                </a>
+          <Grid>
+            <Panel>
+              <PanelTitle>Playlist Stats</PanelTitle>
+              {data?.stats ? (
+                <PlaylistStats
+                  stats={data.stats}
+                  onRemoveDuplicates={handleRemoveDuplicates}
+                  isRemoving={isRemoving}
+                />
+              ) : (
+                <NoDataMessage>No stats available for this playlist.</NoDataMessage>
               )}
-            />
-            {removalError && <ErrorMessage>{removalError}</ErrorMessage>}
-          </TracksPanel>
-        </ContentGrid>
-      </StatsContainer>
+            </Panel>
+
+            <Panel>
+              <PanelTitle>Playlist Tracks</PanelTitle>
+              <TopStatsList
+                items={(data?.tracks || []).filter((t: any) => t && t.external_urls)}
+                noDataMessage="No tracks found in this playlist."
+                loading={loading}
+                error={error}
+                renderRow={(track, idx) => (
+                  <TrackLink
+                    key={track.id || idx}
+                    href={track.external_urls?.spotify || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <TopStatsRow
+                      rank={idx + 1}
+                      imageUrl={track.album?.images?.[1]?.url || track.album?.images?.[0]?.url}
+                      primaryText={track.name || 'Unknown track'}
+                      secondaryText={
+                        track.artists?.map((a: { name: string }) => a.name).join(', ') ||
+                        'Unknown artist'
+                      }
+                      tertiaryText={track.album?.name || 'Unknown album'}
+                    />
+                  </TrackLink>
+                )}
+              />
+              {removalError && <ErrorMessage>{removalError}</ErrorMessage>}
+            </Panel>
+          </Grid>
+        </MainContent>
+      </Container>
     </LeftPanelProvider>
   );
 };
 
-const ContentGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 24px;
-`;
-
-const StatsPanel = styled.div`
-  padding: 16px;
+const Container = styled.div`
+  display: flex;
   background-color: #121212;
-  border-radius: 8px;
-`;
-
-const TracksPanel = styled.div`
-  padding: 16px;
-  background-color: #121212;
-  border-radius: 8px;
-`;
-
-const ErrorMessage = styled.p`
-  color: #e57373;
-  text-align: center;
-  margin-top: 16px;
-`;
-
-const StatsContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  font-family: 'Inter', sans-serif;
-  background-color: #f9fafb;
   min-height: 100vh;
-  color: #1a202c;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  padding: 2rem 3rem;
+  overflow-y: auto;
 `;
 
 const Header = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin-bottom: 24px;
-  position: relative;
+  margin-bottom: 2rem;
+`;
+
+const BackButton = styled(Button)`
+  background-color: #1db954 !important;
+  color: #000 !important;
+  font-weight: 600;
+  border-radius: 25px;
+  padding: 0.6rem 1.5rem;
+  &:hover {
+    background-color: #1ed760 !important;
+  }
+  grid-column: 1 / 2;
+  justify-self: start;
+`;
+
+const PlaylistTitle = styled.h1`
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1db954;
+  grid-column: 2 / 3;
+  justify-self: center;
+  white-space: nowrap;
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+`;
+
+const Panel = styled.div`
+  background-color: #181818;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #282828;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+`;
+
+const PanelTitle = styled.h2`
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1db954;
+`;
+
+const TrackLink = styled.a`
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  &:hover {
+    background-color: #282828;
+    border-radius: 8px;
+    transition: 0.2s ease;
+  }
+`;
+
+const NoDataMessage = styled.p`
+  color: #b3b3b3;
+  text-align: center;
+  padding: 2rem 0;
+`;
+
+const ErrorMessage = styled.p`
+  color: #ff6b6b;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
 `;
