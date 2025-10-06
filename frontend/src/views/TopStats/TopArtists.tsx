@@ -38,7 +38,14 @@ export const TopArtists: React.FC = () => {
                 rank={idx + 1}
                 imageUrl={artist.images?.[1]?.url || artist.images?.[0]?.url}
                 primaryText={artist.name}
-                secondaryText={artist.genres.slice(0, 3).join(', ')}
+                secondaryText={[
+                  artist.genres.slice(0, 3).join(', '),
+                  artist.library_song_count
+                    ? `${artist.library_song_count} songs in your library`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' • ')}
               />
             </ClickableCardWrapper>
           )}
@@ -56,8 +63,6 @@ const ClickableCardWrapper = styled.a`
 
   &:hover > div {
     transform: translateY(-5px);
-    box-shadow:
-      0 15px 20px -5px rgba(0, 0, 0, 0.15),
-      0 8px 10px -4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -4px rgba(0, 0, 0, 0.08);
   }
 `;

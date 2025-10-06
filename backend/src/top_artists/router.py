@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Path
 from src.login.service import get_current_user
 
-from .service import get_top_artists
+from .service import get_top_artists_with_song_count
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def get_top_artists_for_period(
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
-        artists = get_top_artists(access_token, time_range=time_range)
+        artists = get_top_artists_with_song_count(access_token, time_range=time_range)
         if artists is None:
             raise HTTPException(
                 status_code=401, detail="Failed to fetch top artists or token expired"

@@ -8,6 +8,7 @@ interface Artist {
   genres: string[];
   images: { url: string; height: number; width: number }[];
   uri: string;
+  library_song_count?: number;
 }
 
 export const useTopArtists = (period: string) => {
