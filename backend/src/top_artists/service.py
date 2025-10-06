@@ -73,9 +73,10 @@ def get_top_artists_with_song_count(
 
     user_id = "me"
     playlist_cache_key = f"user:{user_id}:playlists"
-    cached_playlists = redis_client.get(playlist_cache_key)
-    if cached_playlists:
-        playlists = json.loads(cached_playlists)
+    cached_playlists_bytes = await redis_client.get(playlist_cache_key)
+    if cached_playlists_bytes:
+        cached_playlists_str = cached_playlists_bytes.decode("utf-8")
+        playlists = json.loads(cached_playlists_str)
     else:
         playlists = get_user_playlists(access_token)
         redis_client.set(playlist_cache_key, json.dumps(playlists), ex=60 * 60 * 24)
