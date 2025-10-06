@@ -31,6 +31,7 @@ def get_top_artists(
         )
         response.raise_for_status()
         return cast(List[Dict[str, Any]], response.json()["items"])
-    except requests.HTTPError as e:
-        print(f"Error fetching top artists: {e}")
+    except requests.HTTPError:
+        return None
+    except Exception:
         return None
