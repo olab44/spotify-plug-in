@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 from src.config.constants import SPOTIFY_API_BASE_URL
@@ -9,9 +9,13 @@ from .utils import get_playlist_tracks
 
 def get_user_playlists(access_token: str) -> Optional[List[Dict]]:
     """Fetches all of a user's playlists."""
+    if not access_token:
+        return None
+
     headers = {"Authorization": f"Bearer {access_token}"}
     playlists: List[Dict] = []
     url = f"{SPOTIFY_API_BASE_URL}/me/playlists?limit=50"
+
     try:
         while url:
             response = requests.get(url, headers=headers, timeout=10)
@@ -22,6 +26,9 @@ def get_user_playlists(access_token: str) -> Optional[List[Dict]]:
     except requests.RequestException as e:
         print(f"Error fetching user playlists: {e}")
         return None
+    except Exception:
+        return None
+
     return playlists
 
 
@@ -29,21 +36,30 @@ def get_playlist_data(
     access_token: str, playlist_id: str
 ) -> Optional[Dict[str, List[Dict] | Dict]]:
     """Fetches tracks and calculates stats for a specific playlist."""
+    if not access_token or not playlist_id:
+        return None
+
     headers = {"Authorization": f"Bearer {access_token}"}
+
     try:
         playlist_response = requests.get(
             f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}", headers=headers, timeout=10
         )
         playlist_response.raise_for_status()
-        playlist_info = playlist_response.json()
+
+        tracks = get_playlist_tracks(access_token, playlist_id)
+        if tracks is None:
+            return None
 
         stats = get_playlist_stats(access_token, playlist_id)
         if stats is None:
             return None
 
-        return {"tracks": playlist_info["tracks"]["items"], "stats": stats}
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching playlist data: {e}")
+        return {"tracks": tracks, "stats": stats}
+
+    except requests.exceptions.RequestException:
+        return None
+    except Exception:
         return None
 
 
@@ -58,33 +74,44 @@ def remove_duplicate_tracks(access_token: str, playlist_id: str) -> bool:
     if not tracks:
         return False
 
-    seen_track_ids = set()
-    duplicates_to_remove: List[Dict[str, str]] = []
+    seen_track_uris = set()
+    duplicates_by_uri: Dict[str, List[int]] = {}
 
-    for track in tracks:
-        if track["id"] in seen_track_ids:
-            duplicates_to_remove.append({"uri": track["uri"]})
+    for index, item in enumerate(tracks):
+        track_data = item.get("track")
+        if not track_data or not track_data.get("uri"):
+            continue
+
+        uri = track_data["uri"]
+
+        if uri in seen_track_uris:
+            if uri not in duplicates_by_uri:
+                duplicates_by_uri[uri] = []
+            duplicates_by_uri[uri].append(index)
         else:
-            seen_track_ids.add(track["id"])
+            seen_track_uris.add(uri)
 
-    if not duplicates_to_remove:
+    if not duplicates_by_uri:
         return True
+
+    tracks_to_delete: List[Dict[str, Any]] = [
+        {"uri": uri, "positions": positions} for uri, positions in duplicates_by_uri.items()
+    ]
 
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
     }
+    url = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
 
-    batch_size = 100
-    for i in range(0, len(duplicates_to_remove), batch_size):
-        batch = duplicates_to_remove[i : i + batch_size]
-        payload = {"tracks": batch}
-        url = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
-        try:
-            response = requests.delete(url, headers=headers, json=payload, timeout=10)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Error removing tracks from playlist: {e}")
-            return False
+    payload = {"tracks": tracks_to_delete}
+
+    try:
+        response = requests.delete(url, headers=headers, json=payload, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException:
+        return False
+    except Exception:
+        return False
 
     return True
