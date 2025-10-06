@@ -5,9 +5,10 @@ export const PageContainer = styled.div`
   margin: 0 auto;
   padding: 2rem 1rem;
   font-family: 'Inter', sans-serif;
-  background-color: #f9fafb; /* Light gray background */
+
+  background-color: #121212;
   min-height: 100vh;
-  color: #1a202c;
+  color: #ffffff;
 `;
 
 export const Title = styled.h2`
@@ -16,12 +17,10 @@ export const Title = styled.h2`
   color: #1db954;
   text-align: center;
   margin-bottom: 2rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   @media (max-width: 640px) {
     font-size: 2rem;
   }
 `;
-
 export const StatsList = styled.div`
   display: flex;
   flex-direction: column;
@@ -31,24 +30,18 @@ export const StatsList = styled.div`
 export const StatsCard = styled.div`
   background-color: #ffffff;
   border-radius: 0.75rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 1.25rem;
   cursor: pointer;
-  transition:
-    transform 0.2s ease-in-out,
-    box-shadow 0.2s ease-in-out;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   border: 1px solid #e2e8f0;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow:
-      0 15px 20px -5px rgba(0, 0, 0, 0.15),
-      0 8px 10px -4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -4px rgba(0, 0, 0, 0.08);
   }
 `;
 

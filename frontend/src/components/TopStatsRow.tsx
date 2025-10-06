@@ -19,24 +19,30 @@ interface TopStatsRowProps {
   smallImages?: SmallImageProps[];
 }
 
+const SPOTIFY_DARK_BG = '#121212';
+const SPOTIFY_CARD_SURFACE = '#282828';
+const SPOTIFY_CARD_HOVER = '#353535';
+const SPOTIFY_TEXT_PRIMARY = '#ffffff';
+const SPOTIFY_TEXT_SECONDARY = '#b3b3b3';
+const SPOTIFY_TEXT_TERTIARY = '#a0a0a0';
+
 const StatsIndex = styled(Box)(({ theme }) => ({
-  fontWeight: 800,
-  fontSize: '1.75rem',
-  minWidth: '3rem',
+  fontWeight: 700,
+  fontSize: '2rem',
+  minWidth: '4rem',
   textAlign: 'center',
-  color: theme.palette.text.secondary,
-  backgroundColor: theme.palette.action.hover,
-  borderRadius: theme.shape.borderRadius,
+  color: SPOTIFY_TEXT_PRIMARY,
+
   padding: '0.5rem 0.25rem',
 }));
 
 const StatsImage = styled('img')<{ isCircular: boolean }>(({ theme, isCircular }) => ({
-  width: 72,
-  height: 72,
-  borderRadius: isCircular ? '50%' : theme.shape.borderRadius,
+  width: 64,
+  height: 64,
+  borderRadius: isCircular ? '50%' : '4px',
   objectFit: 'cover',
   flexShrink: 0,
-  boxShadow: theme.shadows[1],
+  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5)',
 }));
 
 const SmallImageWrapper = styled(Box)(({ theme }) => ({
@@ -63,46 +69,60 @@ export const TopStatsRow: React.FC<TopStatsRowProps> = ({
 
   return (
     <Paper
-      elevation={1}
+      elevation={3}
       sx={{
         p: 2,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
         cursor: 'pointer',
-        transition: theme.transitions.create(['transform', 'box-shadow']),
+        transition: theme.transitions.create(['transform', 'box-shadow', 'background-color']),
+        bgcolor: SPOTIFY_CARD_SURFACE,
         '&:hover': {
-          transform: 'translateY(-5px)',
-          boxShadow: theme.shadows[4],
+          transform: 'scale(1.005)',
+          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.7)',
+          bgcolor: SPOTIFY_CARD_HOVER,
         },
-        bgcolor: 'background.paper',
-        borderRadius: 2,
+        borderRadius: '8px',
       }}
     >
       <StatsIndex>{rank}.</StatsIndex>
       {imageUrl && (
-        <Link href={spotifyUrl} target="_blank" rel="noopener noreferrer" sx={{ flexShrink: 0 }}>
+        <Link
+          href={spotifyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          sx={{ flexShrink: 0 }}
+        >
           <StatsImage
             src={imageUrl}
             alt={primaryText}
             isCircular={isCircularImage}
             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              e.currentTarget.src = 'https://placehold.co/72x72/E0E0E0/333333?text=No+Image';
+              e.currentTarget.src = 'https://placehold.co/64x64/282828/ffffff?text=X';
             }}
           />
         </Link>
       )}
-      <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
-        <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+      <Stack spacing={0} sx={{ flexGrow: 1, minWidth: 0 }}>
+        {' '}
+        <Typography
+          variant="subtitle1"
+          fontWeight="bold"
+          color={SPOTIFY_TEXT_PRIMARY}
+          noWrap
+          title={primaryText}
+        >
           {primaryText}
         </Typography>
         {secondaryText && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color={SPOTIFY_TEXT_SECONDARY} noWrap title={secondaryText}>
             {secondaryText}
           </Typography>
         )}
         {tertiaryText && (
-          <Typography variant="caption" color="text.disabled">
+          <Typography variant="caption" color={SPOTIFY_TEXT_TERTIARY} noWrap title={tertiaryText}>
             {tertiaryText}
           </Typography>
         )}
@@ -116,6 +136,7 @@ export const TopStatsRow: React.FC<TopStatsRowProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               title={img.name}
+              onClick={(e) => e.stopPropagation()}
             >
               <Avatar
                 src={img.url}
@@ -123,7 +144,7 @@ export const TopStatsRow: React.FC<TopStatsRowProps> = ({
                 sx={{
                   width: 32,
                   height: 32,
-                  border: `2px solid ${theme.palette.background.paper}`,
+                  border: `2px solid ${SPOTIFY_CARD_SURFACE}`,
                   zIndex: smallImages.length - idx,
                 }}
               />
