@@ -1,6 +1,6 @@
 import json
 from concurrent.futures import ProcessPoolExecutor
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, Dict, List, Optional, Set, Union, cast
 
 import requests
 from redis.client import Redis
@@ -73,12 +73,17 @@ def get_top_artists_with_song_count(
 
     user_id = "me"
     playlist_cache_key = f"user:{user_id}:playlists"
-    cached_playlists_bytes = await redis_client.get(playlist_cache_key)
-    if cached_playlists_bytes:
-        cached_playlists_str = cached_playlists_bytes.decode("utf-8")
-        playlists = json.loads(cached_playlists_str)
+
+    cached_playlists = cast(Union[bytes, None], redis_client.get(playlist_cache_key))
+    playlists: List[Dict[str, Any]]
+
+    if cached_playlists is not None:
+        playlists = json.loads(cached_playlists.decode("utf-8"))
     else:
-        playlists = get_user_playlists(access_token)
+        playlists_result = get_user_playlists(access_token)
+        if playlists_result is None:
+            return None
+        playlists = playlists_result
         redis_client.set(playlist_cache_key, json.dumps(playlists), ex=60 * 60 * 24)
 
     futures = [process_pool.submit(get_playlist_tracks, access_token, pl["id"]) for pl in playlists]
@@ -87,16 +92,23 @@ def get_top_artists_with_song_count(
         all_tracks.extend(f.result())
 
     artist_count_cache_key = f"user:{user_id}:artist_track_counts:{time_range}"
-    cached_counts = redis_client.get(artist_count_cache_key)
-    if cached_counts:
-        artist_song_count = json.loads(cached_counts)
+
+    cached_counts = cast(Union[bytes, None], redis_client.get(artist_count_cache_key))
+    artist_song_count: Dict[str, int]
+
+    if cached_counts is not None:
+        artist_song_count = json.loads(cached_counts.decode("utf-8"))
     else:
         artist_song_count = build_artist_song_count(all_tracks)
         redis_client.set(artist_count_cache_key, json.dumps(artist_song_count), ex=60 * 60 * 2)
 
     for artist in artists:
-        artist_id = artist.get("id")
-        artist["library_song_count"] = artist_song_count.get(artist_id, 0)
+        artist_id: Optional[str] = artist.get("id")
+
+        if artist_id:
+            artist["library_song_count"] = artist_song_count.get(artist_id, 0)
+        else:
+            artist["library_song_count"] = 0
 
     return artists
 
