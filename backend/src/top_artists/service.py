@@ -27,7 +27,7 @@ def get_user_playlists(access_token: str) -> Optional[List[Dict[str, Any]]]:
             return None
         data = resp.json()
         playlists.extend(data.get("items", []))
-        url = data.get("next")  # handle pagination
+        url = data.get("next")
     return playlists
 
 
@@ -67,12 +67,11 @@ def build_artist_song_count(tracks: List[Dict[str, Any]]) -> Dict[str, int]:
 def get_top_artists_with_song_count(
     access_token: str, time_range: str = "medium-term"
 ) -> Optional[List[Dict[str, Any]]]:
-    # Get top artists
     artists = get_top_artists(access_token, time_range=time_range)
     if artists is None:
         return None
 
-    user_id = "me"  # or fetch from token claims if available
+    user_id = "me"
     playlist_cache_key = f"user:{user_id}:playlists"
     cached_playlists = redis_client.get(playlist_cache_key)
     if cached_playlists:
@@ -81,24 +80,19 @@ def get_top_artists_with_song_count(
         playlists = get_user_playlists(access_token)
         redis_client.set(playlist_cache_key, json.dumps(playlists), ex=60 * 60 * 24)
 
-    # Fetch all tracks from all playlists in parallel
     futures = [process_pool.submit(get_playlist_tracks, access_token, pl["id"]) for pl in playlists]
     all_tracks = []
     for f in futures:
         all_tracks.extend(f.result())
 
-    # Build artist-song counts (cache result)
     artist_count_cache_key = f"user:{user_id}:artist_track_counts:{time_range}"
     cached_counts = redis_client.get(artist_count_cache_key)
     if cached_counts:
         artist_song_count = json.loads(cached_counts)
     else:
         artist_song_count = build_artist_song_count(all_tracks)
-        redis_client.set(
-            artist_count_cache_key, json.dumps(artist_song_count), ex=60 * 60 * 2
-        )  # cache 2h
+        redis_client.set(artist_count_cache_key, json.dumps(artist_song_count), ex=60 * 60 * 2)
 
-    # Add count to top artists
     for artist in artists:
         artist_id = artist.get("id")
         artist["library_song_count"] = artist_song_count.get(artist_id, 0)

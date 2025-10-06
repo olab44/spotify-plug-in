@@ -7,12 +7,14 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Typography,
   useTheme,
 } from '@mui/material';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { LogoutButton } from './LogoutButton';
 
 type LeftPanelContextType = {
   open: boolean;
@@ -130,6 +132,10 @@ const LeftPanel: React.FC = () => {
             {NAV_ITEMS.map((item) => (
               <NavLinkItem key={item.path} {...item} onClick={closePanel} />
             ))}
+
+            <ListItemButton sx={{ borderRadius: 1, mb: 1, mx: 1 }}>
+              <ListItemText primary={<LogoutButton />} />
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
