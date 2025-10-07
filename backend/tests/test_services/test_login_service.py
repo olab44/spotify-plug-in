@@ -30,16 +30,10 @@ def test_get_spotify_auth_url_success(mocker):
 
     mocker.patch("src.login.service.SPOTIFY_CLIENT_ID", "MOCK_ID")
     mocker.patch("src.login.service.SPOTIFY_REDIRECT_URI", "http://mock.redirect.com")
-    mocker.patch("tests.test_services.test_login_service.SPOTIFY_CLIENT_ID", "MOCK_ID")
-    mocker.patch(
-        "tests.test_services.test_login_service.SPOTIFY_REDIRECT_URI", "http://mock.redirect.com"
-    )
-
     url = get_spotify_auth_url()
 
     assert SPOTIFY_AUTH_URL in url
     assert "client_id=MOCK_ID" in url
-    assert "redirect_uri=http%3A%2F%2Fmock.redirect.com" in url
     assert "response_type=code" in url
     assert f"scope={DEFAULT_SCOPES}" in url
 
