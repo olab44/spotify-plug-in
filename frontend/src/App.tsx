@@ -10,6 +10,7 @@ import { Index } from './views/Index';
 import { NotFound } from './views/NotFound';
 import { PlaylistDetails } from './views/Playlists/PlaylistDetails';
 import { Playlists } from './views/Playlists/Playlists';
+import { LanguageRecommendations } from './views/Recommendations/LanguageRecommendations';
 import { TopArtists } from './views/TopStats/TopArtists';
 import { TopGenres } from './views/TopStats/TopGenres';
 import { TopTracks } from './views/TopStats/TopTracks';
@@ -31,6 +32,7 @@ const App: React.FC = () => (
           <Route path="/top-tracks" element={<TopTracks />} />
           <Route path="/top-artists" element={<TopArtists />} />
           <Route path="/top-genres" element={<TopGenres />} />
+          <Route path="/recommendations" element={<LanguageRecommendations />} />
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
