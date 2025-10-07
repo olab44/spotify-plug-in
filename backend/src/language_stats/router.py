@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.language_stats.dal import stream_playlist_tracks
 from src.login.service import get_current_user
 
-from .processor_optimized import get_language_stats
+from .processor import get_language_stats
 from .schemas import LanguageStats
 
 router = APIRouter()

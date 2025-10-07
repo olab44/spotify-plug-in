@@ -7,7 +7,7 @@ from math import log2
 from typing import Any, AsyncIterable, Dict, List, Tuple
 
 import aiohttp
-import langid
+from langdetect import detect_langs
 from redis.asyncio import Redis, from_url
 
 from .language_names import LANGUAGE_NAMES
@@ -97,16 +97,14 @@ async def _process_uncached_track(track_data: Tuple[str, str, str, str]) -> Tupl
     return track_id, result
 
 
-def _detect_language_langid(text: str) -> Tuple[str, float]:
-
+def _detect_language_langid(text: str):
     if not text:
         return "unknown", 0.0
-
     try:
-        lang, conf = langid.classify(text)
-        return lang, float(conf)
-    except Exception as e:
-        logger.error(f"Langid failed to classify text. Error: {e}", exc_info=True)
+        langs = detect_langs(text)
+        best = langs[0]
+        return best.lang, best.prob
+    except Exception:
         return "unknown", 0.0
 
 

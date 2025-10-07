@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import React, { useState } from 'react';
 import { COLORS } from './theme';
 
+import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { SelectContent } from './SelectContent';
 import { SelectFilters } from './SelectFilters';
 import { SelectLanguage } from './SelectLanguage';
@@ -51,34 +52,37 @@ export const LanguageRecommendations: React.FC = () => {
     selections.targetLanguages.length === 0 || selections.contentTypes.length === 0;
 
   return (
-    <Container>
-      <Title>🎧 Language Recommendation Engine </Title>
-      <Subtitle>
-        Select your goals and let AI build your perfect personalized study playlist.
-      </Subtitle>
+    <LeftPanelProvider>
+      <LeftPanel />
+      <Container>
+        <Title>Language Recommendation Engine</Title>
+        <Subtitle>
+          Select your goals and let AI build your perfect personalized study playlist.
+        </Subtitle>
 
-      <SelectContent
-        currentSelection={selections.contentTypes}
-        onSelect={(value) => updateSelections('contentTypes', value)}
-      />
+        <SelectContent
+          currentSelection={selections.contentTypes}
+          onSelect={(value) => updateSelections('contentTypes', value)}
+        />
 
-      <SelectLanguage
-        currentSelection={selections.targetLanguages}
-        onSelect={(value) => updateSelections('targetLanguages', value)}
-      />
+        <SelectLanguage
+          currentSelection={selections.targetLanguages}
+          onSelect={(value) => updateSelections('targetLanguages', value)}
+        />
 
-      <SelectFilters
-        availableGenres={availableGenres}
-        currentSelection={selections.genres}
-        onSelect={(value) => updateSelections('genres', value)}
-      />
+        <SelectFilters
+          availableGenres={availableGenres}
+          currentSelection={selections.genres}
+          onSelect={(value) => updateSelections('genres', value)}
+        />
 
-      <Divider />
+        <Divider />
 
-      <GenerateButton onClick={handleGenerate} disabled={isGenerateDisabled}>
-        Generate Recommendations
-      </GenerateButton>
-    </Container>
+        <GenerateButton onClick={handleGenerate} disabled={isGenerateDisabled}>
+          Generate Recommendations
+        </GenerateButton>
+      </Container>
+    </LeftPanelProvider>
   );
 };
 

@@ -3,6 +3,7 @@ import re
 from typing import Optional
 
 import aiohttp
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,8 +32,10 @@ async def fetch_lyrics(track_name: str, artist_name: str) -> Optional[str]:
 
             async with session.get(lyrics_url) as lyric_resp:
                 html = await lyric_resp.text()
-                match = re.search(r'<div class="lyrics">(.+?)</div>', html, re.DOTALL)
-                if match:
-                    lyrics = re.sub(r"<.*?>", "", match.group(1))
-                    return lyrics.strip()
-    return None
+                soup = BeautifulSoup(html, "html.parser")
+                lyrics_divs = soup.find_all("div", class_=lambda x: x and "Lyrics__Container" in x)
+                if not lyrics_divs:
+                    return None
+                lyrics = "\n".join(div.get_text(separator="\n") for div in lyrics_divs)
+                clean_lyrics = re.sub(r"\[.*?\]", "", lyrics)
+                return clean_lyrics.strip() or None
