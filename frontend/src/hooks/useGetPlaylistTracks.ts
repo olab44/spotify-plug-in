@@ -5,7 +5,6 @@ import { useAuth } from './useAuth';
 
 export const useGetPlaylistTracks = (playlistId: string | undefined) => {
   const [data, setData] = useState<{
-    name: { tracks: any[]; stats: any };
     tracks: any[];
     stats: any;
   } | null>(null);

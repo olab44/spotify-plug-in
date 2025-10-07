@@ -17,29 +17,42 @@ const DashboardContent: React.FC<{ user: User | null }> = ({ user }) => {
       {user ? (
         <>
           <DashboardTitle>Welcome, {user.display_name}!</DashboardTitle>
-          <p className="text-gray-700 mb-6">Email: {user.email}</p>
+          <p className="text-gray-400 mb-8">Email: {user.email}</p>{' '}
+          {/* 📧 Adjusted text color for dark theme */}
           <DashboardGrid>
-            <StyledLink to="/top-tracks">
+            <StyledLink to="/top-tracks" $accentColor="#1db954">
+              {' '}
+              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Tracks</span>
             </StyledLink>
-            <StyledLink to="/top-artists">
+            <StyledLink to="/top-artists" $accentColor="#FF5733">
+              {' '}
+              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Artists</span>
             </StyledLink>
-            <StyledLink to="/top-genres">
+            <StyledLink to="/top-genres" $accentColor="#33A1FF">
+              {' '}
+              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Genres</span>
             </StyledLink>
-            <StyledLink to="/playlists">
+            <StyledLink to="/playlists" $accentColor="#FFC300">
+              {' '}
+              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Playlists Stats</span>
             </StyledLink>
-            <StyledLink to="/language-stats">
+            <StyledLink to="/language-stats" $accentColor="#A133FF">
+              {' '}
+              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Language Stats</span>
             </StyledLink>
-            <StyledLink to="/recommendations">
+            <StyledLink to="/recommendations" $accentColor="#1db954">
+              {' '}
+              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Recommendations</span>
             </StyledLink>
@@ -68,6 +81,8 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
+    // NOTE: For a full dark theme, the parent component/root element
+    // must have a dark background (e.g., bg-black).
     <LeftPanelProvider>
       <LeftPanel />
       <DashboardContent user={user} />
@@ -81,6 +96,7 @@ const StyledDashboardContainer = styled.div`
   padding: 2rem 1rem;
   padding-left: 5rem;
   transition: all 0.3s ease-in-out;
+  /* Assuming the parent/root element sets the dark background */
 
   @media (max-width: 768px) {
     padding-left: 1rem;
@@ -92,7 +108,7 @@ const DashboardTitle = styled.h1`
   font-size: 2.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #1a202c;
+  color: #ffffff; /* 💡 Fixed text color for visibility on a dark background */
 `;
 
 const DashboardGrid = styled.div`
@@ -109,27 +125,62 @@ const DashboardGrid = styled.div`
 const baseButtonStyles = `
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start; /* 🔄 Align content to the start (left) */
+  justify-content: flex-end; /* 🔄 Push content to the bottom */
   color: #ffffff;
   font-size: 1.5rem;
   font-weight: 700;
-  padding: 3rem 2rem;
+  padding: 1.5rem; /* 📐 Smaller, more compact padding */
+  height: 120px; /* 📐 Fixed height for uniform cards */
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); /* 🌑 Deeper shadow for dark theme */
+  text-align: left;
+  position: relative;
+  overflow: hidden;
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: scale(1.02); /* ✨ Slight scale up on hover */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  }
+
+  span:first-of-type {
+    position: absolute; /* 🎨 Position icon/accent element */
+    top: 1rem;
+    right: 1rem;
+    font-size: 3rem !important; /* Larger icon size */
+    opacity: 0.8;
+  }
+
+  span:last-child {
+    font-size: 1.25rem; /* Slightly smaller text for better card fit */
+    margin-top: auto; /* Push text to the bottom */
   }
 `;
 
-const StyledLink = styled(Link)`
+interface StyledLinkProps {
+  $accentColor: string;
+}
+
+const StyledLink = styled(Link)<StyledLinkProps>`
   ${baseButtonStyles};
-  background-color: #555555;
+  background: linear-gradient(135deg, #282828 0%, #181818 100%); /* 🖤 Dark, gradient background */
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px; /* 🎨 Accent color strip */
+    height: 60px;
+    background-color: ${(props) => props.$accentColor}; /* Use the passed accent color */
+    transform: rotate(45deg) translate(25%, -25%);
+    transform-origin: top right;
+    border-radius: 0 0.5rem 0 0;
+    opacity: 0.9;
+  }
+
   &:hover {
-    background-color: #777777;
+    background: linear-gradient(135deg, #303030 0%, #1a1a1a 100%); /* Slightly lighter on hover */
   }
 `;

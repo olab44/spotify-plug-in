@@ -8,6 +8,7 @@ interface Artist {
   genres: string[];
   images: { url: string; height: number; width: number }[];
   uri: string;
+  library_song_count?: number;
 }
 
 export const useTopArtists = (period: string) => {
@@ -23,7 +24,7 @@ export const useTopArtists = (period: string) => {
 
       setLoading(true);
       try {
-        const response = await artistsApi.get(`/${period}`);
+        const response = await artistsApi.get(`/${period}/with-counts`);
         setArtists(response.data);
         setError(null);
       } catch (err) {

@@ -10,6 +10,9 @@ interface TopStatsListProps<T> {
   noDataMessage?: string;
 }
 
+const SPOTIFY_RED = '#f03737';
+const SPOTIFY_YELLOW = '#ffcc00';
+
 export const TopStatsList = <T,>({
   loading,
   error,
@@ -23,16 +26,14 @@ export const TopStatsList = <T,>({
 
   if (error) {
     return (
-      <MessageContainer
-        style={{ backgroundColor: '#fee2e2', color: '#ef4444', borderColor: '#fca5a5' }}
-      >
-        Error: {error}
+      <MessageContainer $type="error">
+        Error loading data. Please try again. ({error})
       </MessageContainer>
     );
   }
 
   if (items.length === 0) {
-    return <MessageContainer>{noDataMessage}</MessageContainer>;
+    return <MessageContainer $type="info">{noDataMessage}</MessageContainer>;
   }
 
   return (
@@ -44,19 +45,21 @@ export const TopStatsList = <T,>({
   );
 };
 
-export const MessageContainer = styled.div`
+export const MessageContainer = styled.div<{ $type: 'error' | 'info' }>`
   padding: 1.5rem;
-  background-color: #e0f2fe;
-  color: #3b82f6;
   border-radius: 0.5rem;
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
   margin-top: 1.5rem;
-  border: 1px solid #93c5fd;
+
+  background-color: ${(props) => (props.$type === 'error' ? '#251b1b' : '#28281a')};
+  color: ${(props) => (props.$type === 'error' ? SPOTIFY_RED : SPOTIFY_YELLOW)};
+  border: 1px solid ${(props) => (props.$type === 'error' ? SPOTIFY_RED : SPOTIFY_YELLOW)};
 `;
 
 export const StatsList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem; /* Reduced gap slightly for a more compact list */
+  margin-bottom: 2rem;
 `;

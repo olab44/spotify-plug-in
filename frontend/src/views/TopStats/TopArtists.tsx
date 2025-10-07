@@ -38,7 +38,14 @@ export const TopArtists: React.FC = () => {
                 rank={idx + 1}
                 imageUrl={artist.images?.[1]?.url || artist.images?.[0]?.url}
                 primaryText={artist.name}
-                secondaryText={artist.genres.slice(0, 3).join(', ')}
+                secondaryText={[
+                  artist.genres.slice(0, 3).join(', '),
+                  artist.library_song_count
+                    ? `${artist.library_song_count} songs in your library`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' • ')}
               />
             </ClickableCardWrapper>
           )}

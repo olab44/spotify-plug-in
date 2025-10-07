@@ -5,9 +5,10 @@ export const PageContainer = styled.div`
   margin: 0 auto;
   padding: 2rem 1rem;
   font-family: 'Inter', sans-serif;
-  background-color: #f9fafb; /* Light gray background */
+
+  background-color: #121212;
   min-height: 100vh;
-  color: #1a202c;
+  color: #ffffff;
 `;
 
 export const Title = styled.h2`
@@ -16,12 +17,10 @@ export const Title = styled.h2`
   color: #1db954;
   text-align: center;
   margin-bottom: 2rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   @media (max-width: 640px) {
     font-size: 2rem;
   }
 `;
-
 export const StatsList = styled.div`
   display: flex;
   flex-direction: column;

@@ -21,10 +21,25 @@ export interface Playlist {
 export const LanguageStats: React.FC = () => {
   const api = useLanguageApi();
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
+  const [statsTriggered, setStatsTriggered] = useState(false);
+
   const { playlists, loading: playlistsLoading, error: playlistsError } = useGetPlaylists();
 
   const scope = selectedPlaylist ? 'playlist' : 'global';
-  const { stats, isLoading, error } = useLanguageStats(scope, selectedPlaylist || undefined);
+
+  const { stats, isLoading, error } = useLanguageStats(
+    statsTriggered ? scope : null,
+    statsTriggered ? selectedPlaylist || undefined : undefined,
+  );
+
+  const handleGenerateStats = () => {
+    setStatsTriggered(true);
+  };
+
+  const handlePlaylistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPlaylist(e.target.value || null);
+    setStatsTriggered(false);
+  };
 
   return (
     <LeftPanelProvider>
@@ -32,94 +47,132 @@ export const LanguageStats: React.FC = () => {
       <PageContainer>
         <Title>Your Music Languages</Title>
 
-        <FilterContainer>
-          <Label htmlFor="playlist-select">Select Playlist:</Label>
-          {playlistsLoading ? (
-            <Text>Loading playlists...</Text>
-          ) : playlistsError ? (
-            <ErrorMessage>{playlistsError}</ErrorMessage>
-          ) : (
-            <Select
-              id="playlist-select"
-              value={selectedPlaylist || ''}
-              onChange={(e) => setSelectedPlaylist(e.target.value || null)}
-            >
-              <option value="">All Tracks (Global)</option>
-              {playlists.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </FilterContainer>
-        {isLoading && <LoadingMessage>Analyzing your music languages...</LoadingMessage>}
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-
-        {!isLoading && !error && stats && (
-          <ContentGrid>
-            <Panel>
-              <StatsOverview>
-                <StatCard>
-                  <StatLabel>Tracks Analyzed</StatLabel>
-                  <StatValue>{stats.total_tracks || 0}</StatValue>
-                </StatCard>
-                <StatCard>
-                  <StatLabel>Primary Language</StatLabel>
-                  <StatValue>{stats.dominant_language.toUpperCase() || 'N/A'}</StatValue>
-                </StatCard>
-                <StatCard>
-                  <StatLabel>Diversity Score</StatLabel>
-                  <StatValue>{`${(stats.language_diversity_score * 100).toFixed(0)}%`}</StatValue>
-                </StatCard>
-              </StatsOverview>
-            </Panel>
-
-            <Panel>
-              <SectionTitle>Language Distribution</SectionTitle>
-              <LanguageList>
-                {stats.languages.map((lang) => (
-                  <LanguageItem key={lang.language_code}>
-                    <LanguageHeader>
-                      <LanguageCode>{lang.language_code.toUpperCase()}</LanguageCode>
-                      <Text variant="secondary">{lang.count} tracks</Text>
-                    </LanguageHeader>
-                    <ProgressBarContainer>
-                      <ProgressBar width={lang.percentage} />
-                    </ProgressBarContainer>
-                    <PercentageText>{lang.percentage.toFixed(1)}%</PercentageText>
-                  </LanguageItem>
+        <ControlsContainer>
+          <FilterContainer>
+            <Label htmlFor="playlist-select">Select Playlist:</Label>
+            {playlistsLoading ? (
+              <Text>Loading playlists...</Text>
+            ) : playlistsError ? (
+              <ErrorMessage>{playlistsError}</ErrorMessage>
+            ) : (
+              <Select
+                id="playlist-select"
+                value={selectedPlaylist || ''}
+                onChange={handlePlaylistChange}
+              >
+                <option value="">All Tracks (Global)</option>
+                {playlists.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
-              </LanguageList>
-            </Panel>
+              </Select>
+            )}
+          </FilterContainer>
+          <GenerateButton onClick={handleGenerateStats} disabled={playlistsLoading}>
+            Generate Stats
+          </GenerateButton>
+        </ControlsContainer>
 
-            <Panel style={{ gridColumn: 'span 2' }}>
-              <SectionTitle>Example Tracks by Language</SectionTitle>
-              <ExamplesGrid>
-                {stats.languages.map((lang) => (
-                  <ExampleCard key={lang.language_code}>
-                    <ExampleHeader>
-                      <Text variant="primary">{lang.language_code.toUpperCase()}</Text>
-                      <Badge>{lang.count} tracks</Badge>
-                    </ExampleHeader>
-                    <ExampleList>
-                      {lang.example_tracks.map((t, i) => (
-                        <ExampleTrack key={i}>{t}</ExampleTrack>
-                      ))}
-                    </ExampleList>
-                  </ExampleCard>
-                ))}
-              </ExamplesGrid>
-            </Panel>
-          </ContentGrid>
+        {statsTriggered && (
+          <>
+            {isLoading && <LoadingMessage>Analyzing your music languages...</LoadingMessage>}
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+
+            {!isLoading && !error && stats && (
+              <ContentGrid>
+                <Panel>
+                  <StatsOverview>
+                    <StatCard>
+                      <StatLabel>Tracks Analyzed</StatLabel>
+                      <StatValue>{stats.total_tracks || 0}</StatValue>
+                    </StatCard>
+                    <StatCard>
+                      <StatLabel>Primary Language</StatLabel>
+                      <StatValue>{stats.dominant_language.toUpperCase() || 'N/A'}</StatValue>
+                    </StatCard>
+                    <StatCard>
+                      <StatLabel>Diversity Score</StatLabel>
+                      <StatValue>{`${(stats.language_diversity_score * 100).toFixed(
+                        0,
+                      )}%`}</StatValue>
+                    </StatCard>
+                  </StatsOverview>
+                </Panel>
+
+                <Panel>
+                  <SectionTitle>Language Distribution</SectionTitle>
+                  <LanguageList>
+                    {stats.languages.map((lang) => (
+                      <LanguageItem key={lang.language_code}>
+                        <LanguageHeader>
+                          <LanguageCode>{lang.language_code.toUpperCase()}</LanguageCode>
+                          <Text variant="secondary">{lang.count} tracks</Text>
+                        </LanguageHeader>
+                        <ProgressBarContainer>
+                          <ProgressBar width={lang.percentage} />
+                        </ProgressBarContainer>
+                        <PercentageText>{lang.percentage.toFixed(1)}%</PercentageText>
+                      </LanguageItem>
+                    ))}
+                  </LanguageList>
+                </Panel>
+
+                <Panel style={{ gridColumn: 'span 2' }}>
+                  <SectionTitle>Example Tracks by Language</SectionTitle>
+                  <ExamplesGrid>
+                    {stats.languages.map((lang) => (
+                      <ExampleCard key={lang.language_code}>
+                        <ExampleHeader>
+                          <Text variant="primary">{lang.language_code.toUpperCase()}</Text>
+                          <Badge>{lang.count} tracks</Badge>
+                        </ExampleHeader>
+                        <ExampleList>
+                          {lang.example_tracks.map((t, i) => (
+                            <ExampleTrack key={i}>{t}</ExampleTrack>
+                          ))}
+                        </ExampleList>
+                      </ExampleCard>
+                    ))}
+                  </ExamplesGrid>
+                </Panel>
+              </ContentGrid>
+            )}
+          </>
         )}
       </PageContainer>
     </LeftPanelProvider>
   );
 };
 
-const FilterContainer = styled.div`
+const ControlsContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
   margin-bottom: 16px;
+`;
+
+const GenerateButton = styled.button`
+  background-color: #1db954; /* Spotify Green */
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #1ed760;
+  }
+
+  &:disabled {
+    background-color: #404040;
+    cursor: not-allowed;
+  }
+`;
+
+const FilterContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;

@@ -33,7 +33,6 @@ export const useLanguageStats = (scope: 'global' | 'playlist' = 'global', playli
         setError(null);
       } catch (err) {
         console.error(err);
-        setError('Failed to load language statistics. Please try again.');
         setStats(null);
       } finally {
         setIsLoading(false);

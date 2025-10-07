@@ -1,6 +1,41 @@
 import styled from '@emotion/styled';
 import { Text } from '../../components/common/StyledComponents';
 
+export const ProgressBar = styled.div`
+  width: 100%;
+  height: 4px;
+  background-color: #1e1e1e;
+  border-radius: 2px;
+  margin-top: 8px;
+`;
+
+export const ProgressFill = styled.div<{ progress: number }>`
+  width: ${(props) => props.progress}%;
+  height: 100%;
+  background-color: #1db954;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+`;
+
+export const GenerateButton = styled.button`
+  background-color: #1db954;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 16px;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #1ed760;
+  }
+  &:disabled {
+    background-color: #1e1e1e;
+    cursor: not-allowed;
+  }
+`;
+
 export const FilterContainer = styled.div`
   margin-bottom: 16px;
   display: flex;

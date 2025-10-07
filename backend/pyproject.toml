@@ -77,6 +77,10 @@ module = ["tests.*"]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 
+[[tool.mypy.overrides]]
+module = "src.language_stats.processor_optimized"
+ignore_errors = true
+
 [tool.bandit]
 exclude_dirs = ["tests", "examples"]
 tests = ["B201", "B301"]

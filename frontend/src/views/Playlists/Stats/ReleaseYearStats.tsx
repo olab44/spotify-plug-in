@@ -1,4 +1,5 @@
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'; // Import Recharts components
+import styled from '@emotion/styled';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { BoldText, InfoText, Section, SectionTitle } from '../StyledComponents';
 
 interface ReleaseYearStatsProps {
@@ -14,7 +15,7 @@ export const ReleaseYearStats = ({ releaseYearStats }: ReleaseYearStatsProps) =>
   const decadeData = Object.entries(releaseYearStats.histogram)
     .sort(([a], [b]) => parseInt(a) - parseInt(b))
     .map(([decade, count]) => ({
-      decade,
+      year: decade,
       count,
     }));
 
@@ -29,20 +30,47 @@ export const ReleaseYearStats = ({ releaseYearStats }: ReleaseYearStatsProps) =>
         <BoldText>Newest:</BoldText> {releaseYearStats.newestTrack.name} (
         {releaseYearStats.newestTrack.year})
       </InfoText>
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={decadeData}>
-          <XAxis dataKey="decade" stroke="#b3b3b3" tickLine={false} axisLine={false} />
-          <YAxis stroke="#b3b3b3" tickLine={false} axisLine={false} />
-          <Tooltip contentStyle={{ backgroundColor: '#212121', border: 'none' }} />
-          <Line
-            type="monotone"
-            dataKey="count"
-            stroke="#1db954"
-            strokeWidth={2}
-            dot={{ r: 5, fill: '#1db954', strokeWidth: 2 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+
+      <ChartContainer>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={decadeData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+            <XAxis
+              dataKey="year"
+              stroke="#b3b3b3"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 10 }}
+              padding={{ left: 10, right: 10 }}
+            />
+            <YAxis
+              stroke="#b3b3b3"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 10 }}
+              label={{
+                value: 'Count',
+                angle: -90,
+                position: 'insideLeft',
+                fill: '#b3b3b3',
+                fontSize: 10,
+              }}
+              allowDecimals={false}
+            />
+            <Tooltip
+              cursor={{ fill: '#282828' }}
+              contentStyle={{ backgroundColor: '#212121', border: '1px solid #333', color: '#fff' }}
+              labelFormatter={(label) => `Release Year: ${label}`}
+              formatter={(value, name) => [value, 'Tracks']}
+            />
+            <Bar dataKey="count" fill="#1db954" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
     </Section>
   );
 };
+
+const ChartContainer = styled.div`
+  background-color: #181818;
+  padding-top: 1rem;
+`;
