@@ -1,16 +1,21 @@
-from typing import List
+from typing import Any, Dict, List
 
 from pydantic import BaseModel
 
 
-class LanguageRecommendationRequest(BaseModel):
-    user_id: str
-    languages: List[str]
+class ArtistSimple(BaseModel):
+    id: str
+    name: str
+    genres: List[str] = []
+    popularity: int = 0
+    external_urls: Dict[str, Any] = {}
 
 
-class LanguageRecommendationResponse(BaseModel):
-    podcasts: List[str]
-    music_tracks: List[str]
-    playlist_url: str
-    lyrics: List[str]
-    translations: List[str]
+class RecommendationRequest(BaseModel):
+    target_language: str
+    limit: int = 20
+    include_artists: List[str] = []
+
+
+class RecommendationResponse(BaseModel):
+    recommendations: List[ArtistSimple]

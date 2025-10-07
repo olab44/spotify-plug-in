@@ -1,21 +1,16 @@
 import asyncio
 import json
-import logging
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from math import log2
 from typing import Any, AsyncIterable, Dict, List, Tuple
 
-import aiohttp
 from langdetect import detect_langs
 from redis.asyncio import Redis, from_url
 
 from .language_names import LANGUAGE_NAMES
 from .lyrics import fetch_lyrics
 from .schemas import LanguageCount, LanguageStats
-
-logger = logging.getLogger(__name__)
-
 
 process_pool = ProcessPoolExecutor()
 redis_client: Redis = from_url("redis://redis:6379")
@@ -76,14 +71,7 @@ def _get_track_data(track: Dict[str, Any]) -> Tuple[str, str, str, str]:
 
 async def _process_uncached_track(track_data: Tuple[str, str, str, str]) -> Tuple[str, Dict]:
     track_id, track_name, artist_names, album_name = track_data
-    lyrics = None
-    try:
-        logger.debug(f"Fetching lyrics for: {track_name} by {artist_names}")
-        lyrics = await fetch_lyrics(track_name, artist_names)
-    except aiohttp.ClientResponseError as e:
-        logger.warning(f"Failed to fetch lyrics for {track_name}: {e}")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred for {track_name}: {e}", exc_info=True)
+    lyrics = await fetch_lyrics(track_name, artist_names)
 
     text = lyrics or f"{track_name} {artist_names} {album_name}".strip()
 
@@ -93,7 +81,6 @@ async def _process_uncached_track(track_data: Tuple[str, str, str, str]) -> Tupl
     result = {"language": lang, "confidence": conf}
     if track_id:
         await redis_client.set(track_id, json.dumps(result))
-        logger.debug(f"Detected language {lang} for {track_name} and cached.")
     return track_id, result
 
 

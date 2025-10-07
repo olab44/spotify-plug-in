@@ -1,24 +1,13 @@
+import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
+import { useGetRecommendations } from '@/hooks/useArtistsRecommendation';
 import styled from '@emotion/styled';
 import React, { useState } from 'react';
-import { COLORS } from './theme';
-
-import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { SelectContent } from './SelectContent';
 import { SelectFilters } from './SelectFilters';
 import { SelectLanguage } from './SelectLanguage';
+import { COLORS } from './theme';
 
-interface LanguageSelection {
-  name: string;
-  level: string;
-}
-
-interface SelectionsState {
-  contentTypes: string[];
-  targetLanguages: LanguageSelection[];
-  genres: string[];
-}
-
-const availableGenres: string[] = [
+const availableGenres = [
   'Comedy',
   'News',
   'Fiction',
@@ -30,26 +19,30 @@ const availableGenres: string[] = [
 ];
 
 export const LanguageRecommendations: React.FC = () => {
-  const [selections, setSelections] = useState<SelectionsState>({
+  const [selections, setSelections] = useState({
     contentTypes: [],
     targetLanguages: [],
     genres: [],
   });
+  const [submittedData, setSubmittedData] = useState<any | null>(null);
 
   const handleGenerate = (): void => {
-    console.log('Generating recommendations with filters:', selections);
-    alert('Generating recommendations!');
+    const language = selections.targetLanguages[0]?.name;
+    if (!language) return;
+    setSubmittedData({
+      target_language: language,
+      genres: selections.genres,
+      content_types: selections.contentTypes,
+    });
   };
 
-  const updateSelections = (key: keyof SelectionsState, value: any): void => {
-    setSelections((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+  const { recommendations, loading, error } = useGetRecommendations(submittedData);
 
-  const isGenerateDisabled: boolean =
+  const isGenerateDisabled =
     selections.targetLanguages.length === 0 || selections.contentTypes.length === 0;
+
+  // Debug view: check what’s actually rendering
+  console.log({ selections, submittedData, recommendations, loading, error });
 
   return (
     <LeftPanelProvider>
@@ -60,32 +53,51 @@ export const LanguageRecommendations: React.FC = () => {
           Select your goals and let AI build your perfect personalized study playlist.
         </Subtitle>
 
+        {/* Ensure subcomponents are visible */}
         <SelectContent
           currentSelection={selections.contentTypes}
-          onSelect={(value) => updateSelections('contentTypes', value)}
+          onSelect={(value) => setSelections((p) => ({ ...p, contentTypes: value }))}
         />
 
         <SelectLanguage
           currentSelection={selections.targetLanguages}
-          onSelect={(value) => updateSelections('targetLanguages', value)}
+          onSelect={(value) => setSelections((p) => ({ ...p, targetLanguages: value }))}
         />
 
         <SelectFilters
           availableGenres={availableGenres}
           currentSelection={selections.genres}
-          onSelect={(value) => updateSelections('genres', value)}
+          onSelect={(value) => setSelections((p) => ({ ...p, genres: value }))}
         />
 
         <Divider />
 
         <GenerateButton onClick={handleGenerate} disabled={isGenerateDisabled}>
-          Generate Recommendations
+          {loading ? 'Loading...' : 'Generate Recommendations'}
         </GenerateButton>
+
+        {error && <ErrorText>{error}</ErrorText>}
+
+        {!loading && recommendations.length > 0 && (
+          <ResultsContainer>
+            <h3>Recommended Artists:</h3>
+            {recommendations.map((a) => (
+              <ArtistCard key={a.id}>
+                <a href={a.external_urls.spotify} target="_blank" rel="noreferrer">
+                  <strong>{a.name}</strong>
+                </a>
+                <p>{a.genres.join(', ')}</p>
+                <p>Popularity: {a.popularity}</p>
+              </ArtistCard>
+            ))}
+          </ResultsContainer>
+        )}
       </Container>
     </LeftPanelProvider>
   );
 };
 
+// --- styled components (same as before) ---
 const Container = styled.div`
   max-width: 600px;
   margin: 40px auto;
@@ -134,5 +146,31 @@ const GenerateButton = styled.button`
   &:disabled {
     background-color: ${COLORS.disabledColor};
     cursor: not-allowed;
+  }
+`;
+
+const ErrorText = styled.p`
+  color: red;
+  margin-top: 15px;
+`;
+
+const ResultsContainer = styled.div`
+  margin-top: 30px;
+`;
+
+const ArtistCard = styled.div`
+  background-color: ${COLORS.spotifyGreen};
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+
+  a {
+    color: ${COLORS.textColor};
+    text-decoration: none;
+  }
+
+  p {
+    margin: 4px 0;
+    font-size: 0.9em;
   }
 `;

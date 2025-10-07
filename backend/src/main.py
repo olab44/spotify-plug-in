@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from src.language_recommendation.router import router as recommendation_router
 from src.language_stats.router import router as language_router
 from src.login.router import router as login_router
 from src.playlists.router import router as playlists_router
@@ -24,3 +25,4 @@ app.include_router(artists_router, prefix="/top-artists")
 app.include_router(top_genres_router, prefix="/top-genres")
 app.include_router(playlists_router, prefix="/playlists")
 app.include_router(language_router, prefix="/language")
+app.include_router(recommendation_router, prefix="/recommendation")
