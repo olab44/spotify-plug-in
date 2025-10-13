@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { theme } from './theme';
 import { Callback } from './views/Callback';
 import { Dashboard } from './views/Dashboard';
+import { DynamicPlaylist } from './views/DynamicPlaylist';
 import { Index } from './views/Index';
 import { NotFound } from './views/NotFound';
 import { PlaylistDetails } from './views/Playlists/PlaylistDetails';
@@ -33,6 +34,7 @@ const App: React.FC = () => (
           <Route path="/top-artists" element={<TopArtists />} />
           <Route path="/top-genres" element={<TopGenres />} />
           <Route path="/recommendations" element={<LanguageRecommendations />} />
+          <Route path="/dynamic-playlist" element={<DynamicPlaylist />} />
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -22,4 +22,4 @@ TIME_RANGES = {
     "long-term": "long_term",
 }
 
-DEFAULT_SCOPES = "user-read-private user-read-email user-library-read playlist-read-private user-top-read user-read-playback-position playlist-modify-private playlist-modify-public "
+DEFAULT_SCOPES = "user-read-private user-read-email user-library-read playlist-read-private user-top-read user-read-recently-played user-read-playback-position playlist-modify-private playlist-modify-public "

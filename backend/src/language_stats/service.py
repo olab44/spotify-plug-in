@@ -2,7 +2,7 @@ import json
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from math import log2
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 
 from langdetect import LangDetectException, detect
 from redis.client import Redis
@@ -33,7 +33,7 @@ def get_language_stats_for_playlist(
 
 
 def _process_tracks_in_batches(tracks: List[Dict], redis_client: Redis) -> Dict[str, Dict]:
-    language_counts = defaultdict(lambda: {"count": 0, "examples": []})
+    language_counts: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"count": 0, "examples": []})
     track_id_map = {str(track["id"]): track for track in tracks if track.get("id")}
     if not track_id_map:
         return {}
@@ -41,15 +41,17 @@ def _process_tracks_in_batches(tracks: List[Dict], redis_client: Redis) -> Dict[
     cached_results = redis_client.mget(list(track_id_map.keys()))
 
     uncached_track_args: List[Tuple[str, str, str]] = []
-    for i, track_id in enumerate(track_id_map.keys()):
-        track = track_id_map[track_id]
-        if cached_results[i]:
-            lang = json.loads(cached_results[i]).get("language", "unknown")
-            _update_counts(language_counts, lang, track)
-        else:
-            artist_name = track.get("artists", [{}])[0].get("name", "")
-            track_name = track.get("name", "")
-            uncached_track_args.append((track_id, track_name, artist_name))
+    if cached_results:
+        for i, track_id in enumerate(track_id_map.keys()):
+            track = track_id_map[track_id]
+            cached_item = cached_results[i]
+            if cached_item:
+                lang = json.loads(cached_item.decode("utf-8")).get("language", "unknown")
+                _update_counts(language_counts, lang, track)
+            else:
+                artist_name = track.get("artists", [{}])[0].get("name", "")
+                track_name = track.get("name", "")
+                uncached_track_args.append((track_id, track_name, artist_name))
 
     if uncached_track_args:
         results = list(process_pool.map(_detect_and_cache_language, uncached_track_args))
@@ -71,7 +73,7 @@ def _detect_and_cache_language(args: Tuple[str, str, str]) -> str:
 
     text_to_analyze = lyrics or f"{track_name} {artist_name}"
     try:
-        lang = detect(text_to_analyze)
+        lang = cast(str, detect(text_to_analyze))
     except LangDetectException:
         lang = "unknown"
     if track_id:
@@ -80,7 +82,7 @@ def _detect_and_cache_language(args: Tuple[str, str, str]) -> str:
     return lang
 
 
-def _update_counts(counts: Dict, lang: str, track: Dict):
+def _update_counts(counts: Dict, lang: str, track: Dict) -> None:
     entry = counts[lang]
     entry["count"] += 1
     if len(entry["examples"]) < 3:

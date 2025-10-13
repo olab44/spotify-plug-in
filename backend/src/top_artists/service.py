@@ -1,6 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, List, Set
+from typing import Dict, List, Set, cast
 
 from redis.client import Redis
 from src.config.spotify_client import SpotifyClient
@@ -36,7 +36,7 @@ def _get_or_create_artist_song_counts(
     cached_counts = redis_client.get(cache_key)
 
     if cached_counts:
-        return json.loads(cached_counts)
+        return cast(Dict[str, int], json.loads(cached_counts.decode("utf-8")))
 
     playlists = spotify_client.playlists.get_all_my_playlists()
     if not playlists:

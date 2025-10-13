@@ -10,7 +10,7 @@ def get_all_user_playlists(spotify_client: SpotifyClient) -> List[dict] | None:
     return spotify_client.playlists.get_all_my_playlists()
 
 
-def remove_duplicates_from_playlist(spotify_client, playlist_id: str) -> Dict | None:
+def remove_duplicates_from_playlist(spotify_client: SpotifyClient, playlist_id: str) -> Dict | None:
     playlist_items = spotify_client.playlists.get_playlist_tracks(playlist_id)
     if not playlist_items:
         return {
@@ -51,7 +51,6 @@ def remove_duplicates_from_playlist(spotify_client, playlist_id: str) -> Dict | 
 
 
 def calculate_playlist_analytics(spotify_client: SpotifyClient, playlist_id: str) -> Dict | None:
-    """Fetches tracks and calculates detailed statistics for a playlist."""
     items = spotify_client.playlists.get_playlist_tracks(playlist_id)
     if not items:
         return None
@@ -114,7 +113,7 @@ def _calculate_total_duration(tracks: List[Dict]) -> str:
 def _calculate_avg_popularity(tracks: List[Dict]) -> float:
     if not tracks:
         return 0.0
-    return sum(track.get("popularity", 0) for track in tracks) / len(tracks)
+    return float(sum(track.get("popularity", 0) for track in tracks) / len(tracks))
 
 
 def _calculate_explicit_ratio(tracks: List[Dict]) -> float:
@@ -165,16 +164,18 @@ def _calculate_release_year_stats(tracks: List[Dict]) -> Dict:
     )
 
     histogram = Counter(date.year for date in release_dates)
+    oldest_date = _parse_release_date(oldest_track.get("album", {}).get("release_date", ""))
+    newest_date = _parse_release_date(newest_track.get("album", {}).get("release_date", ""))
 
     return {
         "avgReleaseYear": sum(d.year for d in release_dates) / len(release_dates),
         "oldestTrack": {
             "name": oldest_track.get("name"),
-            "year": _parse_release_date(oldest_track.get("album", {}).get("release_date")).year,
+            "year": oldest_date.year if oldest_date else 0,
         },
         "newestTrack": {
             "name": newest_track.get("name"),
-            "year": _parse_release_date(newest_track.get("album", {}).get("release_date")).year,
+            "year": newest_date.year if newest_date else 0,
         },
         "histogram": dict(sorted(histogram.items())),
     }

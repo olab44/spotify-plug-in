@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from src.config.dependencies import get_spotify_client
@@ -10,8 +10,10 @@ from .schemas import PlaylistDetails, PlaylistSimple, RemoveDuplicatesResponse
 router = APIRouter()
 
 
-@router.get("/all", response_model=List[PlaylistSimple])
-def get_playlists(spotify_client: SpotifyClient = Depends(get_spotify_client)):
+@router.get("/all", response_model=List[PlaylistSimple], summary="Get All User Playlists")
+def get_playlists(
+    spotify_client: SpotifyClient = Depends(get_spotify_client),
+) -> List[Dict[str, Any]]:
     playlists = service.get_all_user_playlists(spotify_client)
     if playlists is None:
         raise HTTPException(
@@ -22,7 +24,9 @@ def get_playlists(spotify_client: SpotifyClient = Depends(get_spotify_client)):
 
 
 @router.get("/{playlist_id}", response_model=PlaylistDetails)
-def get_playlist(playlist_id: str, spotify_client: SpotifyClient = Depends(get_spotify_client)):
+def get_playlist(
+    playlist_id: str, spotify_client: SpotifyClient = Depends(get_spotify_client)
+) -> Dict[str, Any]:
     data = service.calculate_playlist_analytics(spotify_client, playlist_id)
     if data is None:
         raise HTTPException(
@@ -31,13 +35,10 @@ def get_playlist(playlist_id: str, spotify_client: SpotifyClient = Depends(get_s
     return data
 
 
-@router.post(
-    "/{playlist_id}/remove-duplicates",
-    response_model=RemoveDuplicatesResponse,
-)
+@router.post("/{playlist_id}/remove-duplicates", response_model=RemoveDuplicatesResponse)
 def remove_duplicates(
     playlist_id: str, spotify_client: SpotifyClient = Depends(get_spotify_client)
-):
+) -> Dict[str, Any]:
     result = service.remove_duplicates_from_playlist(spotify_client, playlist_id)
     if result is None:
         raise HTTPException(

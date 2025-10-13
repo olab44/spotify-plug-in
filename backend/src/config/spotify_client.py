@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -12,7 +12,7 @@ from .constants import (
 
 
 class AuthAPI:
-    def __init__(self):
+    def __init__(self) -> None:
         self.auth_manager = SpotifyOAuth(
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
@@ -21,23 +21,24 @@ class AuthAPI:
         )
 
     def get_auth_url(self) -> str:
-        return self.auth_manager.get_authorize_url()
+        return cast(str, self.auth_manager.get_authorize_url())
 
     def get_token_from_code(self, code: str) -> Optional[Dict[str, Any]]:
         try:
             token_info = self.auth_manager.get_access_token(code, as_dict=True, check_cache=False)
-            return token_info
+            return cast(Optional[Dict[str, Any]], token_info)
         except spotipy.SpotifyException:
             return None
 
 
 class UsersAPI:
-    def __init__(self, sp_instance: spotipy.Spotify):
+    def __init__(self, sp_instance: spotipy.Spotify) -> None:
         self._sp = sp_instance
 
     def get_profile(self) -> Optional[Dict[str, Any]]:
         try:
-            return self._sp.current_user()
+            profile = self._sp.current_user()
+            return cast(Optional[Dict[str, Any]], profile)
         except spotipy.SpotifyException:
             return None
 
@@ -46,7 +47,8 @@ class UsersAPI:
     ) -> Optional[List[Dict[str, Any]]]:
         try:
             results = self._sp.current_user_top_artists(time_range=time_range, limit=limit)
-            return results.get("items")
+            items = results.get("items")
+            return cast(Optional[List[Dict[str, Any]]], items)
         except spotipy.SpotifyException:
             return None
 
@@ -55,13 +57,14 @@ class UsersAPI:
     ) -> Optional[List[Dict[str, Any]]]:
         try:
             results = self._sp.current_user_top_tracks(time_range=time_range, limit=limit)
-            return results.get("items")
+            items = results.get("items")
+            return cast(Optional[List[Dict[str, Any]]], items)
         except spotipy.SpotifyException:
             return None
 
 
 class CatalogAPI:
-    def __init__(self, sp_instance: spotipy.Spotify):
+    def __init__(self, sp_instance: spotipy.Spotify) -> None:
         self._sp = sp_instance
 
     def get_artists_by_ids(self, artist_ids: List[str]) -> Optional[List[Dict[str, Any]]]:
@@ -70,25 +73,28 @@ class CatalogAPI:
             for i in range(0, len(artist_ids), 50):
                 batch_ids = artist_ids[i : i + 50]
                 results = self._sp.artists(batch_ids)
-                all_artists.extend(results.get("artists", []))
+                artists = results.get("artists", [])
+                all_artists.extend(cast(List[Dict[str, Any]], artists))
             return all_artists
         except spotipy.SpotifyException:
             return None
 
 
 class PlaylistsAPI:
-    def __init__(self, sp_instance: spotipy.Spotify):
+    def __init__(self, sp_instance: spotipy.Spotify) -> None:
         self._sp = sp_instance
 
     def get_all_my_playlists(self) -> Optional[List[Dict[str, Any]]]:
         all_playlists = []
         try:
             results = self._sp.current_user_playlists()
-            all_playlists.extend(results.get("items", []))
+            items = results.get("items", [])
+            all_playlists.extend(cast(List[Dict[str, Any]], items))
 
             while results and results["next"]:
                 results = self._sp.next(results)
-                all_playlists.extend(results.get("items", []))
+                items = results.get("items", [])
+                all_playlists.extend(cast(List[Dict[str, Any]], items))
 
             return all_playlists
         except spotipy.SpotifyException:
@@ -98,11 +104,13 @@ class PlaylistsAPI:
         all_tracks = []
         try:
             results = self._sp.playlist_items(playlist_id)
-            all_tracks.extend(results.get("items", []))
+            items = results.get("items", [])
+            all_tracks.extend(cast(List[Dict[str, Any]], items))
 
             while results and results["next"]:
                 results = self._sp.next(results)
-                all_tracks.extend(results.get("items", []))
+                items = results.get("items", [])
+                all_tracks.extend(cast(List[Dict[str, Any]], items))
 
             return all_tracks
         except spotipy.SpotifyException:
@@ -121,7 +129,7 @@ class PlaylistsAPI:
 
 
 class SpotifyClient:
-    def __init__(self, access_token: str):
+    def __init__(self, access_token: str) -> None:
         sp_instance = spotipy.Spotify(auth=access_token)
 
         self.users = UsersAPI(sp_instance)

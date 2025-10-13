@@ -41,7 +41,6 @@ export const LanguageRecommendations: React.FC = () => {
   const isGenerateDisabled =
     selections.targetLanguages.length === 0 || selections.contentTypes.length === 0;
 
-  // Debug view: check what’s actually rendering
   console.log({ selections, submittedData, recommendations, loading, error });
 
   return (
@@ -52,8 +51,6 @@ export const LanguageRecommendations: React.FC = () => {
         <Subtitle>
           Select your goals and let AI build your perfect personalized study playlist.
         </Subtitle>
-
-        {/* Ensure subcomponents are visible */}
         <SelectContent
           currentSelection={selections.contentTypes}
           onSelect={(value) => setSelections((p) => ({ ...p, contentTypes: value }))}
@@ -97,7 +94,6 @@ export const LanguageRecommendations: React.FC = () => {
   );
 };
 
-// --- styled components (same as before) ---
 const Container = styled.div`
   max-width: 600px;
   margin: 40px auto;

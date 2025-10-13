@@ -18,43 +18,41 @@ const DashboardContent: React.FC<{ user: User | null }> = ({ user }) => {
         <>
           <DashboardTitle>Welcome, {user.display_name}!</DashboardTitle>
           <p className="text-gray-400 mb-8">Email: {user.email}</p>{' '}
-          {/* 📧 Adjusted text color for dark theme */}
           <DashboardGrid>
             <StyledLink to="/top-tracks" $accentColor="#1db954">
               {' '}
-              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Tracks</span>
             </StyledLink>
             <StyledLink to="/top-artists" $accentColor="#FF5733">
               {' '}
-              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Artists</span>
             </StyledLink>
             <StyledLink to="/top-genres" $accentColor="#33A1FF">
               {' '}
-              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Top Genres</span>
             </StyledLink>
             <StyledLink to="/playlists" $accentColor="#FFC300">
               {' '}
-              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Playlists Stats</span>
             </StyledLink>
             <StyledLink to="/language-stats" $accentColor="#A133FF">
               {' '}
-              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Language Stats</span>
             </StyledLink>
             <StyledLink to="/recommendations" $accentColor="#1db954">
               {' '}
-              {/* Added $accentColor prop */}
               <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
               <span>Recommendations</span>
+            </StyledLink>
+            <StyledLink to="/dynamic-playlist" $accentColor="#FF33A8">
+              {' '}
+              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></span>
+              <span>Dynamic Playlist</span>
             </StyledLink>
           </DashboardGrid>
           <LogoutButton />
@@ -81,8 +79,6 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    // NOTE: For a full dark theme, the parent component/root element
-    // must have a dark background (e.g., bg-black).
     <LeftPanelProvider>
       <LeftPanel />
       <DashboardContent user={user} />

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from redis.client import Redis
@@ -17,7 +17,7 @@ router = APIRouter()
 def get_top_artists_quick(
     time_range: str = Path(..., regex="^(short|medium|long)-term$"),
     spotify_client: SpotifyClient = Depends(get_spotify_client),
-):
+) -> List[Dict[str, Any]]:
     spotify_time_range = TIME_RANGES[time_range]
     artists = service.get_top_artists(spotify_client, time_range=spotify_time_range)
 
@@ -29,16 +29,13 @@ def get_top_artists_quick(
     return artists
 
 
-@router.get(
-    "/{time_range}/with-counts",
-    response_model=List[Artist],
-)
+@router.get("/{time_range}/with-counts", response_model=List[Artist])
 def get_top_artists_full(
     time_range: str = Path(..., regex="^(short|medium|long)-term$"),
     user_id: str = Depends(get_user_id),
     spotify_client: SpotifyClient = Depends(get_spotify_client),
     redis_client: Redis = Depends(get_redis_client),
-):
+) -> List[Dict[str, Any]]:
     spotify_time_range = TIME_RANGES[time_range]
 
     artists = service.get_top_artists_with_song_count(
