@@ -1,13 +1,7 @@
 from typing import Any, Dict, List, Optional, cast
 
 import requests
-from src.config.constants import SPOTIFY_API_BASE_URL
-
-TIME_RANGES = {
-    "short-term": "short_term",
-    "medium-term": "medium_term",
-    "long-term": "long_term",
-}
+from src.config.constants import SPOTIFY_API_BASE_URL, TIME_RANGES
 
 
 def get_top_tracks(

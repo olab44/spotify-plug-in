@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react';
-import { usePlaylistsApi } from './api';
-import { useAuth } from './useAuth';
+import { usePlaylistsApi } from './api/api';
+import { useAuth } from './api/useAuth';
 
 export const useGetPlaylistTracks = (playlistId: string | undefined) => {
   const [data, setData] = useState<{
@@ -25,7 +25,6 @@ export const useGetPlaylistTracks = (playlistId: string | undefined) => {
       setData(response.data);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch playlist data:', err);
       setError('Failed to load playlist data. Please try again.');
       setData(null);
     } finally {

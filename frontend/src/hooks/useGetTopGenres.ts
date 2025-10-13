@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useArtistsApi, useGenresApi } from './api';
-import { useAuth } from './useAuth';
+import { useArtistsApi, useGenresApi } from './api/api';
+import { useAuth } from './api/useAuth';
 
 interface ArtistImage {
   url: string;
@@ -44,7 +44,6 @@ export const useGetTopGenres = (period: string) => {
 
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch top genres data:', err);
         setError('Failed to fetch top genres data');
         setGenres([]);
         setArtists([]);

@@ -7,7 +7,7 @@ import {
   Text,
   Title,
 } from '@/components/common/StyledComponents';
-import { useLanguageApi } from '@/hooks/api';
+import { useLanguageApi } from '@/hooks/api/api';
 import { useGetPlaylists } from '@/hooks/useGetPlaylists';
 import { useLanguageStats } from '@/hooks/useLanguageStats';
 import styled from '@emotion/styled';

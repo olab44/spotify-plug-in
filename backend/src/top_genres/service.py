@@ -1,57 +1,25 @@
 from collections import Counter
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import requests
-
-from src.top_artists.service import get_top_artists as get_raw_top_artists
-
-TIME_RANGES = {
-    "short-term": "short_term",
-    "medium-term": "medium_term",
-    "long-term": "long_term",
-}
+from src.config.spotify_client import SpotifyClient
 
 
 def get_top_genres(
-    access_token: str, time_range: str = "medium-term", limit: int = 50
-) -> Optional[List[Dict[str, int]]]:
-    """
-    Get user's top genres by aggregating genres from their top artists.
-    """
-    if not access_token:
-        return None
+    spotify_client: SpotifyClient, time_range: str, artist_limit: int = 50, genre_limit: int = 10
+) -> List[Dict[str, int]]:
+    artists = spotify_client.users.get_top_artists(time_range=time_range, limit=artist_limit)
 
-    if time_range not in TIME_RANGES:
-        raise ValueError(
-            f"Invalid time range: {time_range}. Must be one of {list(TIME_RANGES.keys())}"
-        )
+    if not artists:
+        return []
 
-    try:
-        artists = get_raw_top_artists(access_token, time_range=time_range, limit=limit)
+    all_genres = [genre for artist in artists for genre in artist.get("genres", [])]
 
-        if not artists:
-            return None
+    if not all_genres:
+        return []
 
-        all_genres = [
-            genre
-            for artist in artists
-            if "genres" in artist and isinstance(artist["genres"], list)
-            for genre in artist["genres"]
-        ]
+    genre_counts = Counter(all_genres)
+    sorted_genres = [
+        {"genre": genre, "count": count} for genre, count in genre_counts.most_common(genre_limit)
+    ]
 
-        if not all_genres:
-            return None
-
-        genre_counts = Counter(all_genres)
-        sorted_genres = [
-            {"genre": genre, "count": count} for genre, count in genre_counts.most_common(10)
-        ]
-
-        return sorted_genres
-
-    except requests.exceptions.HTTPError as e:
-        print(f"Error fetching top artists for genre aggregation: {e}")
-        return None
-    except Exception as e:
-        print(f"An unexpected error occurred in get_top_genres: {e}")
-        return None
+    return sorted_genres

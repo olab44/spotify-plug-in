@@ -1,28 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
-from src.login.service import get_current_user
+from typing import Dict, List
 
-from .service import get_top_genres
+from fastapi import APIRouter, Depends, Path
+from src.config.constants import TIME_RANGES
+from src.config.dependencies import get_spotify_client
+from src.config.spotify_client import SpotifyClient
+
+from . import service
+from .schemas import Genre
 
 router = APIRouter()
 
 
-@router.get("/{time_range}")
+@router.get("/{time_range}", response_model=List[Genre], tags=["genres"])
 def get_top_genres_for_period(
-    time_range: str = Path(
-        ..., description="Time range for top genres", regex="^(short|medium|long)-term$"
-    ),
-    user: dict = Depends(get_current_user),
-) -> list:
-    access_token = user.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    time_range: str = Path(..., regex="^(short|medium|long)-term$"),
+    spotify_client: SpotifyClient = Depends(get_spotify_client),
+) -> List[Dict[str, int]]:
+    spotify_time_range = TIME_RANGES.get(time_range)
+    genres = service.get_top_genres(spotify_client=spotify_client, time_range=spotify_time_range)
 
-    try:
-        genres = get_top_genres(access_token, time_range=time_range)
-        if genres is None:
-            raise HTTPException(
-                status_code=401, detail="Failed to fetch top genres or token expired"
-            )
-        return genres
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return genres

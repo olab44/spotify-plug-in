@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { usePlaylistsApi } from './api';
+import { usePlaylistsApi } from './api/api';
 
 export interface PlaylistStats {
   totalTracks: number;

@@ -3,7 +3,7 @@ import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { TopStatsList } from '@/components/TopStatsList';
 import { TopStatsRow } from '@/components/TopStatsRow';
 import { Button } from '@/components/ui/button';
-import { usePlaylistsApi } from '@/hooks/api';
+import { usePlaylistsApi } from '@/hooks/api/api';
 import { useGetPlaylistTracks } from '@/hooks/useGetPlaylistTracks';
 import styled from '@emotion/styled';
 import React, { useState } from 'react';

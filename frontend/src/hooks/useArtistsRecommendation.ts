@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useRecommendationApi } from './api';
-import { useAuth } from './useAuth';
+import { useRecommendationApi } from './api/api';
+import { useAuth } from './api/useAuth';
 
 interface Artist {
   id: string;

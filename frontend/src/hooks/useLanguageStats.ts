@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLanguageApi } from './api';
+import { useLanguageApi } from './api/api';
 
 export interface LanguageCount {
   language_code: string;
@@ -32,7 +32,6 @@ export const useLanguageStats = (scope: 'global' | 'playlist' = 'global', playli
         setStats(response.data);
         setError(null);
       } catch (err) {
-        console.error(err);
         setStats(null);
       } finally {
         setIsLoading(false);
