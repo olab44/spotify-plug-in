@@ -1,44 +1,15 @@
-import { useEffect, useState } from 'react';
+import type { LanguageStats } from '../interfaces';
 import { useLanguageApi } from './api/api';
-
-export interface LanguageCount {
-  language_code: string;
-  count: number;
-  percentage: number;
-  example_tracks: string[];
-}
-
-export interface LanguageStats {
-  total_tracks: number;
-  languages: LanguageCount[];
-  top_languages: string[];
-  dominant_language: string;
-  language_diversity_score: number;
-}
+import { useApiData } from './api/useApiData';
 
 export const useLanguageStats = (scope: 'global' | 'playlist' = 'global', playlistId?: string) => {
-  const [stats, setStats] = useState<LanguageStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const api = useLanguageApi();
+  const languageApi = useLanguageApi();
+  const endpoint =
+    scope === 'playlist' && !playlistId
+      ? null
+      : `/stats?scope=${scope}${scope === 'playlist' ? `&playlist_id=${playlistId}` : ''}`;
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsLoading(true);
-        let url = '/stats?scope=' + scope;
-        if (scope === 'playlist' && playlistId) url += '&playlist_id=' + playlistId;
-        const response = await api.get<LanguageStats>(url);
-        setStats(response.data);
-        setError(null);
-      } catch (err) {
-        setStats(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchStats();
-  }, [api, scope, playlistId]);
+  const { data: stats, ...rest } = useApiData<LanguageStats>(languageApi, endpoint);
 
-  return { stats, isLoading, error };
+  return { stats, ...rest };
 };

@@ -1,59 +1,35 @@
 import { useEffect, useState } from 'react';
+import type { Artist, Genre } from '../interfaces';
 import { useArtistsApi, useGenresApi } from './api/api';
-import { useAuth } from './api/useAuth';
-
-interface ArtistImage {
-  url: string;
-}
-
-interface GenreArtist {
-  id: string;
-  name: string;
-  genres: string[];
-  images: ArtistImage[];
-  external_urls: {
-    spotify: string;
-  };
-}
-
-interface GenreItem {
-  genre: string;
-  count: number;
-}
+import { useApiData } from './api/useApiData';
 
 export const useGetTopGenres = (period: string) => {
-  const [genres, setGenres] = useState<GenreItem[]>([]);
-  const [artists, setArtists] = useState<GenreArtist[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
   const genresApi = useGenresApi();
+  const {
+    data: genres,
+    loading: genresLoading,
+    error: genresError,
+  } = useApiData<Genre[]>(genresApi, `/${period}`);
+
   const artistsApi = useArtistsApi();
+  const {
+    data: artists,
+    loading: artistsLoading,
+    error: artistsError,
+  } = useApiData<Artist[]>(artistsApi, `/${period}`);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTopData = async () => {
-      if (!isAuthenticated) return;
+    setLoading(genresLoading || artistsLoading);
+    setError(genresError || artistsError);
+  }, [genresLoading, artistsLoading, genresError, artistsError]);
 
-      setLoading(true);
-      try {
-        const genresResponse = await genresApi.get(`/${period}`);
-        setGenres(genresResponse.data);
-
-        const artistsResponse = await artistsApi.get(`/${period}`);
-        setArtists(artistsResponse.data);
-
-        setError(null);
-      } catch (err) {
-        setError('Failed to fetch top genres data');
-        setGenres([]);
-        setArtists([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTopData();
-  }, [period, isAuthenticated, genresApi, artistsApi]);
-
-  return { genres, artists, loading, error };
+  return {
+    genres: genres || [],
+    artists: artists || [],
+    loading,
+    error,
+  };
 };

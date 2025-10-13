@@ -38,7 +38,6 @@ export const useGetRecommendations = (requestData: RecommendationRequest | null)
           setError(null);
         }
       } catch (err) {
-        console.error('Failed to fetch recommendations:', err);
         if (!isCancelled) {
           setError('Failed to load recommendations. Please try again.');
           setRecommendations([]);

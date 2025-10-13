@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
 import { TopStatsList } from '@/components/TopStatsList';
 import { TopStatsRow } from '@/components/TopStatsRow';
@@ -15,7 +14,6 @@ export const PlaylistDetails: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const playlistNameFromUrl = searchParams.get('name');
-
   const { data, loading, error, refetch } = useGetPlaylistTracks(playlistId);
   const playlistsApi = usePlaylistsApi();
   const [isRemoving, setIsRemoving] = useState(false);
@@ -30,16 +28,15 @@ export const PlaylistDetails: React.FC = () => {
       await playlistsApi.post(`/${playlistId}/remove-duplicates`);
       await refetch();
     } catch (err) {
-      console.error('Failed to remove duplicates:', err);
       setRemovalError('Failed to remove duplicates. Please try again.');
     } finally {
       setIsRemoving(false);
     }
   };
 
-  const handleGoBack = () => {
-    navigate('/playlists');
-  };
+  const handleGoBack = () => navigate('/playlists');
+  const tracks = data?.tracks || [];
+  const stats = data?.stats;
 
   return (
     <LeftPanelProvider>
@@ -48,21 +45,22 @@ export const PlaylistDetails: React.FC = () => {
         <MainContent>
           <Header>
             <BackButton onClick={handleGoBack}>← Back to Playlists</BackButton>
-            <PlaylistTitle>
-              {playlistNameFromUrl || (typeof data?.name === 'string' ? data.name : 'Playlist')}
-            </PlaylistTitle>
+            <PlaylistTitle>{playlistNameFromUrl || 'Playlist Details'}</PlaylistTitle>
           </Header>
 
           <Grid>
             <Panel>
               <PanelTitle>Playlist Stats</PanelTitle>
-              {data?.stats ? (
+              {loading && <NoDataMessage>Loading stats...</NoDataMessage>}
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              {stats && !loading && (
                 <PlaylistStats
-                  stats={data.stats}
+                  stats={stats}
                   onRemoveDuplicates={handleRemoveDuplicates}
                   isRemoving={isRemoving}
                 />
-              ) : (
+              )}
+              {!stats && !loading && !error && (
                 <NoDataMessage>No stats available for this playlist.</NoDataMessage>
               )}
             </Panel>
@@ -70,7 +68,7 @@ export const PlaylistDetails: React.FC = () => {
             <Panel>
               <PanelTitle>Playlist Tracks</PanelTitle>
               <TopStatsList
-                items={(data?.tracks || []).filter((t: any) => t && t.external_urls)}
+                items={tracks}
                 noDataMessage="No tracks found in this playlist."
                 loading={loading}
                 error={error}

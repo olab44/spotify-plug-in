@@ -1,54 +1,47 @@
-from fastapi import APIRouter, Depends, HTTPException
-from src.login.service import get_current_user
+from typing import List
 
-from .service import get_playlist_data, get_user_playlists, remove_duplicate_tracks
+from fastapi import APIRouter, Depends, HTTPException, status
+from src.config.dependencies import get_spotify_client
+from src.config.spotify_client import SpotifyClient
+
+from . import service
+from .schemas import PlaylistDetails, PlaylistSimple, RemoveDuplicatesResponse
 
 router = APIRouter()
 
 
-@router.get("/all")
-def get_playlists(user: dict = Depends(get_current_user)) -> list[dict]:
-    access_token = user.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    playlists = get_user_playlists(access_token)
+@router.get("/all", response_model=List[PlaylistSimple])
+def get_playlists(spotify_client: SpotifyClient = Depends(get_spotify_client)):
+    playlists = service.get_all_user_playlists(spotify_client)
     if playlists is None:
-        raise HTTPException(status_code=401, detail="Failed to fetch playlists")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to fetch playlists from Spotify.",
+        )
     return playlists
 
 
-@router.get("/{playlist_id}")
-def get_playlist(
-    playlist_id: str, user: dict = Depends(get_current_user)
-) -> dict[str, dict | list]:
-    access_token = user.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    try:
-        data = get_playlist_data(access_token, playlist_id)
-        if data is None:
-            raise HTTPException(status_code=404, detail="Playlist not found or empty")
-
-        return data
-    except HTTPException as e:
+@router.get("/{playlist_id}", response_model=PlaylistDetails)
+def get_playlist(playlist_id: str, spotify_client: SpotifyClient = Depends(get_spotify_client)):
+    data = service.calculate_playlist_analytics(spotify_client, playlist_id)
+    if data is None:
         raise HTTPException(
-            status_code=e.status_code,
-            detail=f"Failed to fetch playlist data: {e.detail}",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Playlist not found or failed to process."
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+    return data
 
 
-@router.post("/{playlist_id}/remove-duplicates")
-def remove_duplicates(playlist_id: str, user: dict = Depends(get_current_user)) -> dict[str, str]:
-    access_token = user.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    success = remove_duplicate_tracks(access_token, playlist_id)
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to remove duplicates from Spotify.")
-
-    return {"message": "Duplicate tracks removed successfully."}
+@router.post(
+    "/{playlist_id}/remove-duplicates",
+    response_model=RemoveDuplicatesResponse,
+)
+def remove_duplicates(
+    playlist_id: str, spotify_client: SpotifyClient = Depends(get_spotify_client)
+):
+    result = service.remove_duplicates_from_playlist(spotify_client, playlist_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to remove duplicates from Spotify.",
+        )
+    return result

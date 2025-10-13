@@ -60,6 +60,22 @@ class UsersAPI:
             return None
 
 
+class CatalogAPI:
+    def __init__(self, sp_instance: spotipy.Spotify):
+        self._sp = sp_instance
+
+    def get_artists_by_ids(self, artist_ids: List[str]) -> Optional[List[Dict[str, Any]]]:
+        try:
+            all_artists = []
+            for i in range(0, len(artist_ids), 50):
+                batch_ids = artist_ids[i : i + 50]
+                results = self._sp.artists(batch_ids)
+                all_artists.extend(results.get("artists", []))
+            return all_artists
+        except spotipy.SpotifyException:
+            return None
+
+
 class PlaylistsAPI:
     def __init__(self, sp_instance: spotipy.Spotify):
         self._sp = sp_instance
@@ -92,6 +108,17 @@ class PlaylistsAPI:
         except spotipy.SpotifyException:
             return None
 
+    def remove_tracks_by_uri_and_position(
+        self, playlist_id: str, tracks_to_remove: List[Dict]
+    ) -> bool:
+        if not tracks_to_remove:
+            return True
+        try:
+            self._sp.playlist_remove_specific_occurrences_of_items(playlist_id, tracks_to_remove)
+            return True
+        except spotipy.SpotifyException:
+            return False
+
 
 class SpotifyClient:
     def __init__(self, access_token: str):
@@ -99,3 +126,4 @@ class SpotifyClient:
 
         self.users = UsersAPI(sp_instance)
         self.playlists = PlaylistsAPI(sp_instance)
+        self.catalog = CatalogAPI(sp_instance)
