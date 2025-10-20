@@ -1,6 +1,9 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.dynamic_playlist.router import router as dynamic_playlist_router
+from src.dynamic_playlist.scheduler import scheduler
 from src.language_recommendation.router import router as recommendation_router
 from src.language_stats.router import router as language_router
 from src.login.router import router as login_router
@@ -9,7 +12,16 @@ from src.top_artists.router import router as artists_router
 from src.top_genres.router import router as top_genres_router
 from src.top_tracks.router import router as top_tracks_router
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 app.add_middleware(
     CORSMiddleware,

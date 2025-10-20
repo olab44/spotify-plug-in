@@ -103,3 +103,18 @@ export interface PlaylistDetails {
   tracks: Track[];
   stats: PlaylistStats;
 }
+
+export interface DynamicTrack {
+  uri: string;
+  name: string;
+  artist: string;
+}
+
+export interface DynamicPlaylistDetails {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  owner: string;
+  tracks: Track[];
+}

@@ -1,151 +1,223 @@
-import { useState } from 'react';
-import { useDynamicPlaylistApi } from '../hooks/api/api';
+import LeftPanel, { LeftPanelProvider } from '@/components/LeftPanel';
+import {
+  ErrorMessage,
+  LoadingMessage,
+  PageContainer,
+  Panel,
+  Text,
+  Title,
+} from '@/components/common/StyledComponents';
+import { useDynamicPlaylistApi } from '@/hooks/api/api';
+import styled from '@emotion/styled';
+import React, { useState } from 'react';
 import { useGetDynamicPlaylist } from '../hooks/useGetDynamicPlaylist';
 
-const LoadingSpinner = () => (
-  <div style={styles.centered as React.CSSProperties}>Loading playlist...</div>
-);
-
-const ErrorDisplay = ({ error, onRetry }) => (
-  <div style={styles.centered as React.CSSProperties}>
-    <p>Error: {error}</p>
-    <button onClick={onRetry} style={styles.button}>
-      Try Again
-    </button>
-  </div>
-);
-
-const AddTrackForm = ({ onAddTrack, isAdding }) => {
-  const [newTrackUri, setNewTrackUri] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (newTrackUri.trim()) {
-      onAddTrack(newTrackUri.trim());
-      setNewTrackUri('');
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <input
-        type="text"
-        value={newTrackUri}
-        onChange={(e) => setNewTrackUri(e.target.value)}
-        placeholder="spotify:track:..."
-        style={styles.input}
-        disabled={isAdding}
-      />
-      <button type="submit" style={styles.button} disabled={isAdding}>
-        {isAdding ? 'Adding...' : 'Add Track'}
-      </button>
-    </form>
-  );
-};
-
-export const DynamicPlaylist = () => {
+export const DynamicPlaylist: React.FC = () => {
   const { playlist, loading, error, refetch } = useGetDynamicPlaylist();
+  const playlistsApi = useDynamicPlaylistApi();
 
   const [isAdding, setIsAdding] = useState(false);
-  const dynamicPlaylistApi = useDynamicPlaylistApi();
+  const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const [newTrackUri, setNewTrackUri] = useState('');
 
-  const addTrack = async (trackUri) => {
-    setIsAdding(true);
-    try {
-      await dynamicPlaylistApi.post('/heavy-rotation/add', {
-        track_uri: trackUri,
-      });
-      refetch();
-    } catch (err) {
-      alert('Failed to add track. Please check the URI and try again.');
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const isBusy = loading || isAdding;
+  const isBusy = loading || isAdding || !!isRemoving;
 
   if (loading && !playlist) {
-    return <LoadingSpinner />;
+    return (
+      <LeftPanelProvider>
+        <LeftPanel />
+        <PageContainer>
+          <LoadingMessage>Loading playlist...</LoadingMessage>
+        </PageContainer>
+      </LeftPanelProvider>
+    );
   }
 
   if (error) {
-    return <ErrorDisplay error={error} onRetry={refetch} />;
+    return (
+      <LeftPanelProvider>
+        <LeftPanel />
+        <PageContainer>
+          <ErrorMessage>{error}</ErrorMessage>
+          <button onClick={refetch}>Try Again</button>
+        </PageContainer>
+      </LeftPanelProvider>
+    );
   }
 
   if (!playlist) {
-    return <div style={styles.centered as React.CSSProperties}>No playlist data available.</div>;
+    return (
+      <LeftPanelProvider>
+        <LeftPanel />
+        <PageContainer>
+          <Text>No playlist data available.</Text>
+        </PageContainer>
+      </LeftPanelProvider>
+    );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <div>
-          <h2>{playlist.name}</h2>
-          <p style={styles.description}>{playlist.description}</p>
-        </div>
-        <button onClick={refetch} disabled={isBusy} style={styles.button}>
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
-
-      <AddTrackForm onAddTrack={addTrack} isAdding={isAdding} />
-
-      <ul style={styles.trackList}>
-        {playlist.tracks.map((track, index) => (
-          <li key={track.uri} style={styles.trackItem}>
-            <span style={styles.trackNumber}>{index + 1}</span>
-            <div>
-              <div style={styles.trackName}>{track.name}</div>
-              <div style={styles.artistName}>{track.artist}</div>
+    <LeftPanelProvider>
+      <LeftPanel />
+      <Container>
+        <MainContent>
+          <Header>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <Thumbnail src="/placeholder.svg" alt="trending" />
+              <div>
+                <Title>{playlist.name}</Title>
+                <Text style={{ color: '#b3b3b3' }}>{playlist.description}</Text>
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <input
+                placeholder="spotify:track:... or track uri"
+                value={newTrackUri}
+                onChange={(e) => setNewTrackUri(e.target.value)}
+                style={{
+                  padding: '0.4rem',
+                  borderRadius: 6,
+                  border: '1px solid #333',
+                  background: '#0f0f0f',
+                  color: '#fff',
+                }}
+                disabled={isBusy}
+              />
+              <RefreshButton
+                onClick={async () => {
+                  setIsAdding(true);
+                  try {
+                    await playlistsApi.post('/heavy-rotation/add', { track_uri: newTrackUri });
+                    setNewTrackUri('');
+                    await refetch();
+                  } catch (e) {
+                    // Basic error handling; more robust toast can be used
+                    console.error('Failed to add track', e);
+                  } finally {
+                    setIsAdding(false);
+                  }
+                }}
+                disabled={isBusy || !newTrackUri}
+              >
+                Add
+              </RefreshButton>
+              <RefreshButton onClick={refetch} disabled={isBusy}>
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </RefreshButton>
+            </div>
+          </Header>
+
+          <Panel>
+            <PanelTitle>Tracks</PanelTitle>
+            <TrackList>
+              {playlist.tracks.map((track, index) => (
+                <TrackItem key={track.uri}>
+                  <TrackNumber>{index + 1}</TrackNumber>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold' }}>{track.name}</div>
+                    <div style={{ color: '#b3b3b3' }}>{track.artist}</div>
+                  </div>
+                  <RemoveButton
+                    onClick={async () => {
+                      setIsRemoving(track.uri);
+                      try {
+                        await playlistsApi.post('/heavy-rotation/remove', { track_uri: track.uri });
+                        await refetch();
+                      } catch (e) {
+                        console.error('Failed to remove track', e);
+                      } finally {
+                        setIsRemoving(null);
+                      }
+                    }}
+                    disabled={isBusy}
+                  >
+                    {isRemoving === track.uri ? 'Removing...' : 'Remove'}
+                  </RemoveButton>
+                </TrackItem>
+              ))}
+            </TrackList>
+          </Panel>
+        </MainContent>
+      </Container>
+    </LeftPanelProvider>
   );
 };
 
-const styles = {
-  container: {
-    fontFamily: 'sans-serif',
-    width: '100%',
-    maxWidth: '500px',
-    margin: 'auto',
-    background: '#191414',
-    color: '#fff',
-    borderRadius: '8px',
-    padding: '20px',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  description: { color: '#b3b3b3', fontSize: '0.9em', marginTop: '-10px' },
-  button: {
-    background: '#1DB954',
-    color: '#fff',
-    border: 'none',
-    padding: '10px 15px',
-    borderRadius: '20px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-  form: { display: 'flex', gap: '10px', marginBottom: '20px' },
-  input: {
-    flexGrow: 1,
-    padding: '10px',
-    borderRadius: '4px',
-    border: '1px solid #535353',
-    background: '#282828',
-    color: '#fff',
-  },
-  trackList: { listStyle: 'none', padding: 0 },
-  trackItem: { display: 'flex', alignItems: 'center', marginBottom: '15px' },
-  trackNumber: { fontSize: '1.2em', color: '#b3b3b3', width: '30px' },
-  trackName: { fontWeight: 'bold' },
-  artistName: { color: '#b3b3b3', fontSize: '0.9em' },
-  centered: { textAlign: 'center', padding: '40px' },
-};
+const Container = styled.div`
+  display: flex;
+  background-color: #121212;
+  min-height: 100vh;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  padding: 2rem 3rem;
+  overflow-y: auto;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const RefreshButton = styled.button`
+  background-color: #1db954;
+  color: #000;
+  font-weight: 600;
+  border-radius: 25px;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  &:hover {
+    background-color: #1ed760;
+  }
+`;
+
+const PanelTitle = styled.h3`
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #1db954;
+`;
+
+const TrackList = styled.ul`
+  list-style: none;
+  padding: 0;
+`;
+
+const TrackItem = styled.li`
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+`;
+
+const TrackNumber = styled.span`
+  font-size: 1.2em;
+  color: #b3b3b3;
+  width: 30px;
+  margin-right: 12px;
+`;
+
+const Thumbnail = styled.img`
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+`;
+
+const RemoveButton = styled.button`
+  background: transparent;
+  color: #ff4d4f;
+  border: 1px solid rgba(255, 77, 79, 0.15);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;

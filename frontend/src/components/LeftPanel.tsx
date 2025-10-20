@@ -45,6 +45,7 @@ const NAV_ITEMS = [
   { label: 'Playlists', path: '/playlists' },
   { label: 'Language Stats', path: '/language-stats' },
   { label: 'Recommendations', path: '/recommendations' },
+  { label: 'Dynamic Playlist', path: '/dynamic-playlist' },
 ];
 
 const NavLinkItem: React.FC<{ label: string; path: string; onClick: () => void }> = ({
