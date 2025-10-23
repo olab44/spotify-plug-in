@@ -18,9 +18,48 @@ export const DynamicPlaylist: React.FC = () => {
 
   const [isAdding, setIsAdding] = useState(false);
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [newTrackUri, setNewTrackUri] = useState('');
 
-  const isBusy = loading || isAdding || !!isRemoving;
+  const isBusy = loading || isAdding || !!isRemoving || isSaving || isRefreshing;
+
+  type TrackShape = {
+    uri?: string;
+    id?: string;
+    name?: string;
+    artist?: string;
+    artists?: { name: string }[];
+    track?: { uri?: string; id?: string; artists?: { name: string }[] };
+  };
+
+  const getTrackKey = (t: TrackShape) => t.uri || t.id || t.track?.uri || t.track?.id || '';
+  const getTrackArtist = (t: TrackShape) =>
+    t.artists?.[0]?.name || t.artist || t.track?.artists?.[0]?.name || 'Unknown';
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await playlistsApi.post('/heavy-rotation/save', {});
+      await refetch();
+    } catch (e) {
+      console.error('Failed to save playlist', e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await playlistsApi.get('/heavy-rotation/refresh');
+      await refetch();
+    } catch (e) {
+      console.error('Failed to refresh playlist', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   if (loading && !playlist) {
     return (
@@ -91,7 +130,6 @@ export const DynamicPlaylist: React.FC = () => {
                     setNewTrackUri('');
                     await refetch();
                   } catch (e) {
-                    // Basic error handling; more robust toast can be used
                     console.error('Failed to add track', e);
                   } finally {
                     setIsAdding(false);
@@ -101,8 +139,11 @@ export const DynamicPlaylist: React.FC = () => {
               >
                 Add
               </RefreshButton>
-              <RefreshButton onClick={refetch} disabled={isBusy}>
-                {loading ? 'Refreshing...' : 'Refresh'}
+              <RefreshButton onClick={handleSave} disabled={isBusy}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </RefreshButton>
+              <RefreshButton onClick={handleRefresh} disabled={isBusy}>
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </RefreshButton>
             </div>
           </Header>
@@ -110,12 +151,12 @@ export const DynamicPlaylist: React.FC = () => {
           <Panel>
             <PanelTitle>Tracks</PanelTitle>
             <TrackList>
-              {playlist.tracks.map((track, index) => (
-                <TrackItem key={track.uri}>
+              {playlist.tracks.map((track: TrackShape, index: number) => (
+                <TrackItem key={getTrackKey(track)}>
                   <TrackNumber>{index + 1}</TrackNumber>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 'bold' }}>{track.name}</div>
-                    <div style={{ color: '#b3b3b3' }}>{track.artist}</div>
+                    <div style={{ color: '#b3b3b3' }}>{getTrackArtist(track)}</div>
                   </div>
                   <RemoveButton
                     onClick={async () => {

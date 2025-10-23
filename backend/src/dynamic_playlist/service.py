@@ -14,6 +14,7 @@ HEAVY_ROTATION_PLAYLIST_DESC = "Your 10 most trending tracks"
 PLAYLIST_LIMIT = 10
 RECENCY_WEIGHT = 0.7
 CONSISTENCY_WEIGHT = 0.3
+BACKFILL_BUFFER = 10
 
 
 def _get_all_recent_plays(client: SpotifyClient, limit: int = 100) -> List[Dict[str, Any]]:
@@ -88,6 +89,69 @@ def _calculate_trending_scores(
     return final_scores
 
 
+def load_playlist(client: SpotifyClient, user_id: str) -> PlaylistDetails:
+    redis_client = get_redis_client()
+    playlist = _find_or_create_playlist(client, user_id)
+    playlist_id = playlist["id"]
+
+    current_tracks = client.playlists.get_playlist_tracks(playlist_id) or []
+    spotify_uris = [
+        item["track"]["uri"]
+        for item in current_tracks
+        if item.get("track") and item["track"].get("uri")
+    ]
+
+    local_list_key = f"local_playlist:{playlist_id}"
+
+    if len(spotify_uris) <= PLAYLIST_LIMIT:
+        redis_client.delete(local_list_key)
+        if spotify_uris:
+            redis_client.rpush(local_list_key, *spotify_uris)
+        return _build_local_playlist_details(client, playlist, spotify_uris)
+
+    history_key = f"history:{playlist_id}"
+    history_uris = {u.decode("utf-8") for u in redis_client.smembers(history_key)}
+
+    unknown_uris = [u for u in spotify_uris if u not in history_uris]
+
+    if unknown_uris:
+        candidate = unknown_uris[0]
+        new_local = [candidate] + [u for u in spotify_uris if u != candidate][: PLAYLIST_LIMIT - 1]
+    else:
+        new_local = spotify_uris[:PLAYLIST_LIMIT]
+
+    redis_client.delete(local_list_key)
+    if new_local:
+        redis_client.rpush(local_list_key, *new_local)
+
+    return _build_local_playlist_details(client, playlist, new_local)
+
+
+def save_playlist(client: SpotifyClient, user_id: str) -> PlaylistDetails:
+    redis_client = get_redis_client()
+    playlist = _find_or_create_playlist(client, user_id)
+    playlist_id = playlist["id"]
+
+    local_list_key = f"local_playlist:{playlist_id}"
+    local_uris = [u.decode("utf-8") for u in redis_client.lrange(local_list_key, 0, -1)]
+
+    if not local_uris:
+        local_uris = [
+            item["track"]["uri"]
+            for item in client.playlists.get_playlist_tracks(playlist_id) or []
+            if item.get("track")
+        ]
+
+    if local_uris:
+        client.playlists._sp.playlist_replace_items(playlist_id, local_uris[:PLAYLIST_LIMIT])
+
+    redis_client.delete(local_list_key)
+    if local_uris:
+        redis_client.rpush(local_list_key, *local_uris[:PLAYLIST_LIMIT])
+
+    return _format_playlist_details(client, playlist)
+
+
 def refresh_playlist(client: SpotifyClient, user_id: str) -> PlaylistDetails:
     redis_client = get_redis_client()
     playlist = _find_or_create_playlist(client, user_id)
@@ -100,56 +164,49 @@ def refresh_playlist(client: SpotifyClient, user_id: str) -> PlaylistDetails:
 
     if not scores:
         client.playlists._sp.playlist_replace_items(playlist_id, [])
+        redis_client.delete(f"ranked_songs:{playlist_id}")
+        redis_client.delete(f"local_playlist:{playlist_id}")
         return _format_playlist_details(client, playlist)
 
     sorted_tracks = sorted(scores.items(), key=lambda item: item[1]["score"], reverse=True)
 
-    protected_key = f"playlist_protected:{playlist_id}"
-    protected_members = {m.decode("utf-8") for m in redis_client.smembers(protected_key)}
-
-    unique_top_track_uris = []
+    unique_ranked_uris = []
     seen_titles = set()
 
-    for uri in protected_members:
-        if len(unique_top_track_uris) >= PLAYLIST_LIMIT:
-            break
-        unique_top_track_uris.append(uri)
-
     for uri, data in sorted_tracks:
-        if len(unique_top_track_uris) >= PLAYLIST_LIMIT:
-            break
         track_name = data["name"].lower()
         if track_name in seen_titles:
             continue
-        if uri in unique_top_track_uris:
-            seen_titles.add(track_name)
-            continue
         seen_titles.add(track_name)
-        unique_top_track_uris.append(uri)
+        unique_ranked_uris.append(uri)
 
-    client.playlists._sp.playlist_replace_items(playlist_id, unique_top_track_uris)
+    top_10 = unique_ranked_uris[:PLAYLIST_LIMIT]
 
-    redis_state_set = f"playlist_state:{playlist_id}"
-    redis_client.delete(redis_state_set)
-    if unique_top_track_uris:
-        redis_client.sadd(redis_state_set, *unique_top_track_uris)
+    client.playlists._sp.playlist_replace_items(playlist_id, top_10)
+
+    ranked_key = f"ranked_songs:{playlist_id}"
+    redis_client.delete(ranked_key)
+    if unique_ranked_uris:
+        ranked_to_store = unique_ranked_uris[: PLAYLIST_LIMIT + BACKFILL_BUFFER]
+        redis_client.rpush(ranked_key, *ranked_to_store)
+
+    local_list_key = f"local_playlist:{playlist_id}"
+    redis_client.delete(local_list_key)
+    if top_10:
+        redis_client.rpush(local_list_key, *top_10)
+
+    history_key = f"history:{playlist_id}"
+    if top_10:
+        for uri in top_10:
+            redis_client.sadd(history_key, uri)
 
     return _format_playlist_details(client, playlist)
 
 
-def add_track_and_prune(client: SpotifyClient, user_id: str, track_uri: str) -> PlaylistDetails:
+def add_track_local(client: SpotifyClient, user_id: str, track_uri: str) -> PlaylistDetails:
     playlist = _find_or_create_playlist(client, user_id)
     playlist_id = playlist["id"]
-
-    current_tracks = client.playlists.get_playlist_tracks(playlist_id)
-    if current_tracks is None:
-        raise HTTPException(status_code=500, detail="Could not fetch current playlist tracks.")
-
-    current_track_names = {
-        item["track"]["name"].lower()
-        for item in current_tracks
-        if item.get("track") and item["track"].get("name")
-    }
+    redis_client = get_redis_client()
 
     def _extract_track_id(track_ref: str) -> Optional[str]:
         if not track_ref:
@@ -182,71 +239,115 @@ def add_track_and_prune(client: SpotifyClient, user_id: str, track_uri: str) -> 
         new_track_details = client.playlists._sp.track(track_id)
         if not new_track_details or not new_track_details.get("name"):
             raise HTTPException(status_code=400, detail="Invalid track URI provided.")
-        new_track_name = new_track_details["name"].lower()
         new_track_uri = new_track_details["uri"]
     except Exception:
         raise HTTPException(status_code=400, detail="Could not validate the provided track URI.")
 
-    if new_track_name in current_track_names:
-        return _format_playlist_details(client, playlist)
+    local_list_key = f"local_playlist:{playlist_id}"
+    local_uris = [u.decode("utf-8") for u in redis_client.lrange(local_list_key, 0, -1)]
 
-    try:
-        client.playlists._sp.playlist_add_items(playlist_id, [new_track_uri], position=0)
-    except TypeError:
-        client.playlists._sp.playlist_add_items(playlist_id, [new_track_uri])
+    if not local_uris:
+        current_tracks = client.playlists.get_playlist_tracks(playlist_id) or []
+        local_uris = [
+            item["track"]["uri"]
+            for item in current_tracks
+            if item.get("track") and item["track"].get("uri")
+        ]
 
-    redis_client = get_redis_client()
-    redis_client.sadd(f"playlist_protected:{playlist_id}", new_track_uri)
-    updated_tracks = client.playlists.get_playlist_tracks(playlist_id)
-    if updated_tracks and len(updated_tracks) > PLAYLIST_LIMIT:
-        uris_to_score = [item["track"]["uri"] for item in updated_tracks if item.get("track")]
+    if new_track_uri in local_uris:
+        raise HTTPException(status_code=409, detail="Track already present in playlist local view.")
 
-        scores = _calculate_trending_scores(client, track_uris_to_score=uris_to_score)
+    redis_client.lrem(local_list_key, 0, new_track_uri)
+    redis_client.lpush(local_list_key, new_track_uri)
+    redis_client.ltrim(local_list_key, 0, PLAYLIST_LIMIT - 1)
 
-        if scores:
-            track_to_remove_uri = min(scores, key=lambda u: scores.get(u, {}).get("score", 0))
+    history_key = f"history:{playlist_id}"
+    redis_client.sadd(history_key, new_track_uri)
 
-            position = next(
-                (
-                    i
-                    for i, item in enumerate(updated_tracks)
-                    if item.get("track") and item["track"].get("uri") == track_to_remove_uri
-                ),
-                -1,
-            )
-
-            if position != -1:
-                removal_payload = [{"uri": track_to_remove_uri, "positions": [position]}]
-                client.playlists.remove_tracks_by_uri_and_position(playlist_id, removal_payload)
-
-    return _format_playlist_details(client, playlist)
+    updated_local = [u.decode("utf-8") for u in redis_client.lrange(local_list_key, 0, -1)]
+    return _build_local_playlist_details(client, playlist, updated_local)
 
 
-def remove_track_from_playlist(
-    client: SpotifyClient, user_id: str, track_uri: str
-) -> PlaylistDetails:
+def remove_track_local(client: SpotifyClient, user_id: str, track_uri: str) -> PlaylistDetails:
     playlist = _find_or_create_playlist(client, user_id)
     playlist_id = playlist["id"]
-
-    try:
-        current_tracks = client.playlists.get_playlist_tracks(playlist_id) or []
-        removal_payload = []
-        for i, item in enumerate(current_tracks):
-            if item.get("track") and item["track"].get("uri") == track_uri:
-                removal_payload.append({"uri": track_uri, "positions": [i]})
-        if removal_payload:
-            client.playlists.remove_tracks_by_uri_and_position(playlist_id, removal_payload)
-    except Exception:
-        pass
-
     redis_client = get_redis_client()
-    redis_state_set = f"playlist_state:{playlist_id}"
-    try:
-        redis_client.srem(redis_state_set, track_uri)
-    except Exception:
-        pass
 
-    return _format_playlist_details(client, playlist)
+    local_list_key = f"local_playlist:{playlist_id}"
+    local_uris = [u.decode("utf-8") for u in redis_client.lrange(local_list_key, 0, -1)]
+
+    if not local_uris:
+        current_tracks = client.playlists.get_playlist_tracks(playlist_id) or []
+        local_uris = [
+            item["track"]["uri"]
+            for item in current_tracks
+            if item.get("track") and item["track"].get("uri")
+        ]
+
+    if track_uri not in local_uris:
+        raise HTTPException(status_code=404, detail="Track not found in playlist local view.")
+
+    redis_client.lrem(local_list_key, 0, track_uri)
+
+    if len(local_uris) - 1 < PLAYLIST_LIMIT:
+        ranked_key = f"ranked_songs:{playlist_id}"
+        ranked_uris = [u.decode("utf-8") for u in redis_client.lrange(ranked_key, 0, -1)]
+        current_local = [u.decode("utf-8") for u in redis_client.lrange(local_list_key, 0, -1)]
+
+        for ranked_uri in ranked_uris:
+            if ranked_uri not in current_local:
+                redis_client.rpush(local_list_key, ranked_uri)
+                break
+
+    updated_local = [
+        u.decode("utf-8") for u in redis_client.lrange(local_list_key, 0, PLAYLIST_LIMIT - 1)
+    ]
+    return _build_local_playlist_details(client, playlist, updated_local)
+
+
+def get_playlist_history(client: SpotifyClient, user_id: str) -> List[Track]:
+    playlist = _find_or_create_playlist(client, user_id)
+    playlist_id = playlist["id"]
+    redis_client = get_redis_client()
+
+    history_key = f"history:{playlist_id}"
+    history_uris = {u.decode("utf-8") for u in redis_client.smembers(history_key)}
+
+    tracks_out = []
+    for uri in history_uris:
+        try:
+            track = client.playlists._sp.track(uri.split(":")[-1])
+            if track:
+                tracks_out.append(
+                    Track(uri=track["uri"], name=track["name"], artist=track["artists"][0]["name"])
+                )
+        except Exception:
+            continue
+
+    return tracks_out
+
+
+def _build_local_playlist_details(
+    client: SpotifyClient, playlist_data: Dict[str, Any], uris: List[str]
+) -> PlaylistDetails:
+    tracks_out = []
+    for uri in uris:
+        try:
+            track = client.playlists._sp.track(uri.split(":")[-1])
+            if track and track.get("artists"):
+                tracks_out.append(
+                    Track(uri=track["uri"], name=track["name"], artist=track["artists"][0]["name"])
+                )
+        except Exception:
+            continue
+    return PlaylistDetails(
+        id=playlist_data["id"],
+        name=playlist_data["name"],
+        description=playlist_data.get("description", ""),
+        url=playlist_data["external_urls"]["spotify"],
+        owner=playlist_data["owner"]["display_name"],
+        tracks=tracks_out,
+    )
 
 
 def _find_or_create_playlist(client: SpotifyClient, user_id: str) -> Dict[str, Any]:
