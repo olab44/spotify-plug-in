@@ -4,6 +4,7 @@ from src.config.spotify_client import SpotifyClient
 from src.dynamic_playlist.service import _calculate_trending_scores
 
 PLAYLIST_LIMIT = 10
+# test
 
 
 def full_refresh(client: SpotifyClient, playlist_id: str, redis_client: redis.Redis):
