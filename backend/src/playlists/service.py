@@ -1,117 +1,224 @@
-from typing import Any, Dict, List, Optional
+import math
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
+from typing import Dict, List
 
-import requests
-from src.config.constants import SPOTIFY_API_BASE_URL
-
-from .stats import get_playlist_stats
-from .utils import get_playlist_tracks
-
-
-def get_user_playlists(access_token: str) -> Optional[List[Dict]]:
-    """Fetches all of a user's playlists."""
-    if not access_token:
-        return None
-
-    headers = {"Authorization": f"Bearer {access_token}"}
-    playlists: List[Dict] = []
-    url = f"{SPOTIFY_API_BASE_URL}/me/playlists?limit=50"
-
-    try:
-        while url:
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            playlists.extend(data["items"])
-            url = data.get("next")
-    except requests.RequestException as e:
-        print(f"Error fetching user playlists: {e}")
-        return None
-    except Exception:
-        return None
-
-    return playlists
+from src.config.spotify_client import SpotifyClient
 
 
-def get_playlist_data(
-    access_token: str, playlist_id: str
-) -> Optional[Dict[str, List[Dict] | Dict]]:
-    """Fetches tracks and calculates stats for a specific playlist."""
-    if not access_token or not playlist_id:
-        return None
+def get_all_user_playlists(spotify_client: SpotifyClient) -> List[dict] | None:
+    return spotify_client.playlists.get_all_my_playlists()
 
-    headers = {"Authorization": f"Bearer {access_token}"}
 
-    try:
-        playlist_response = requests.get(
-            f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}", headers=headers, timeout=10
-        )
-        playlist_response.raise_for_status()
+def remove_duplicates_from_playlist(spotify_client: SpotifyClient, playlist_id: str) -> Dict | None:
+    playlist_items = spotify_client.playlists.get_playlist_tracks(playlist_id)
+    if not playlist_items:
+        return {
+            "message": "Playlist is empty or could not be fetched.",
+            "duplicates_found": 0,
+            "snapshot_id": "N/A",
+        }
 
-        tracks = get_playlist_tracks(access_token, playlist_id)
-        if tracks is None:
+    positions_by_uri = defaultdict(list)
+    for index, item in enumerate(playlist_items):
+        track = item.get("track")
+        if track and isinstance(track, dict) and track.get("uri"):
+            positions_by_uri[track["uri"]].append(index)
+
+    items_to_remove = []
+    for uri, positions in positions_by_uri.items():
+        if len(positions) > 1:
+            for pos in positions[1:]:
+                items_to_remove.append({"uri": uri, "positions": [pos]})
+
+    if not items_to_remove:
+        return {"message": "No duplicates found.", "duplicates_found": 0, "snapshot_id": "N/A"}
+
+    items_to_remove.sort(key=lambda x: x["positions"][0], reverse=True)
+
+    total_removed_count = len(items_to_remove)
+    for i in range(0, total_removed_count, 100):
+        batch = items_to_remove[i : i + 100]
+        success = spotify_client.playlists.remove_tracks_by_uri_and_position(playlist_id, batch)
+        if not success:
             return None
 
-        stats = get_playlist_stats(access_token, playlist_id)
-        if stats is None:
-            return None
+    return {
+        "message": "Duplicate tracks removed successfully (kept one instance of each).",
+        "duplicates_found": total_removed_count,
+        "snapshot_id": "Updated",
+    }
 
-        return {"tracks": tracks, "stats": stats}
 
-    except requests.exceptions.RequestException:
+def calculate_playlist_analytics(spotify_client: SpotifyClient, playlist_id: str) -> Dict | None:
+    items = spotify_client.playlists.get_playlist_tracks(playlist_id)
+    if not items:
         return None
-    except Exception:
-        return None
 
-
-def remove_duplicate_tracks(access_token: str, playlist_id: str) -> bool:
-    """Removes all duplicate tracks from a playlist.
-    Returns True on success, False on failure or if no tracks found/auth fails.
-    """
-    if not access_token:
-        return False
-
-    tracks = get_playlist_tracks(access_token, playlist_id)
+    tracks = [item["track"] for item in items if item.get("track")]
     if not tracks:
-        return False
+        return None
 
-    seen_track_uris = set()
-    duplicates_by_uri: Dict[str, List[int]] = {}
+    artist_ids = list(
+        set(
+            artist["id"]
+            for track in tracks
+            for artist in track.get("artists", [])
+            if artist.get("id")
+        )
+    )
 
-    for index, item in enumerate(tracks):
-        track_data = item.get("track")
-        if not track_data or not track_data.get("uri"):
-            continue
+    artists_details = spotify_client.catalog.get_artists_by_ids(artist_ids)
+    artist_genres_map = (
+        {artist["id"]: artist["genres"] for artist in artists_details} if artists_details else {}
+    )
 
-        uri = track_data["uri"]
+    song_genres = []
+    for track in tracks:
+        primary_artist_id = track.get("artists", [{}])[0].get("id")
+        if primary_artist_id and primary_artist_id in artist_genres_map:
+            genres = artist_genres_map[primary_artist_id]
+            if genres:
+                song_genres.append(genres[0].replace("-", " "))
 
-        if uri in seen_track_uris:
-            if uri not in duplicates_by_uri:
-                duplicates_by_uri[uri] = []
-            duplicates_by_uri[uri].append(index)
-        else:
-            seen_track_uris.add(uri)
+    user_top_tracks = spotify_client.users.get_top_tracks(time_range="long_term")
 
-    if not duplicates_by_uri:
-        return True
+    stats = {
+        "totalTracks": len(tracks),
+        "totalDuration": _calculate_total_duration(tracks),
+        "avgPopularity": _calculate_avg_popularity(tracks),
+        "explicitContentRatio": _calculate_explicit_ratio(tracks),
+        "duplicateTracks": _find_duplicate_tracks(tracks),
+        "releaseYearStats": _calculate_release_year_stats(tracks),
+        "genres": _calculate_genre_stats(song_genres),
+        "freshnessScore": _calculate_freshness_score(tracks),
+        "diversityScore": _calculate_diversity_score(song_genres),
+        "hitsVsHiddenGems": _calculate_hits_vs_gems(tracks),
+        "tasteSimilarity": (
+            _calculate_taste_similarity(tracks, user_top_tracks) if user_top_tracks else 0.0
+        ),
+    }
 
-    tracks_to_delete: List[Dict[str, Any]] = [
-        {"uri": uri, "positions": positions} for uri, positions in duplicates_by_uri.items()
+    return {"tracks": tracks, "stats": stats}
+
+
+def _calculate_total_duration(tracks: List[Dict]) -> str:
+    total_ms = sum(track.get("duration_ms", 0) for track in tracks)
+    total_seconds = total_ms // 1000
+    minutes, _ = divmod(total_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours}h {minutes}m"
+
+
+def _calculate_avg_popularity(tracks: List[Dict]) -> float:
+    if not tracks:
+        return 0.0
+    return float(sum(track.get("popularity", 0) for track in tracks) / len(tracks))
+
+
+def _calculate_explicit_ratio(tracks: List[Dict]) -> float:
+    if not tracks:
+        return 0.0
+    explicit_count = sum(1 for track in tracks if track.get("explicit"))
+    return explicit_count / len(tracks)
+
+
+def _find_duplicate_tracks(tracks: List[Dict]) -> List[Dict]:
+    track_counts = Counter(track["id"] for track in tracks if track.get("id"))
+    unique_duplicates = {
+        track["id"]: track for track in tracks if track.get("id") and track_counts[track["id"]] > 1
+    }
+    return [
+        {"name": track["name"], "count": track_counts[track["id"]]}
+        for track in unique_duplicates.values()
     ]
 
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
+
+def _parse_release_date(date_str: str) -> datetime | None:
+    for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
+        try:
+            return datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+    return None
+
+
+def _calculate_release_year_stats(tracks: List[Dict]) -> Dict:
+    release_dates = [
+        d
+        for t in tracks
+        if (d := _parse_release_date(t.get("album", {}).get("release_date"))) is not None
+    ]
+    if not release_dates:
+        return {"avgReleaseYear": 0, "oldestTrack": {}, "newestTrack": {}, "histogram": {}}
+
+    oldest_track = min(
+        tracks,
+        key=lambda t: _parse_release_date(t.get("album", {}).get("release_date"))
+        or datetime.max.replace(tzinfo=timezone.utc),
+    )
+    newest_track = max(
+        tracks,
+        key=lambda t: _parse_release_date(t.get("album", {}).get("release_date"))
+        or datetime.min.replace(tzinfo=timezone.utc),
+    )
+
+    histogram = Counter(date.year for date in release_dates)
+    oldest_date = _parse_release_date(oldest_track.get("album", {}).get("release_date", ""))
+    newest_date = _parse_release_date(newest_track.get("album", {}).get("release_date", ""))
+
+    return {
+        "avgReleaseYear": sum(d.year for d in release_dates) / len(release_dates),
+        "oldestTrack": {
+            "name": oldest_track.get("name"),
+            "year": oldest_date.year if oldest_date else 0,
+        },
+        "newestTrack": {
+            "name": newest_track.get("name"),
+            "year": newest_date.year if newest_date else 0,
+        },
+        "histogram": dict(sorted(histogram.items())),
     }
-    url = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
 
-    payload = {"tracks": tracks_to_delete}
 
-    try:
-        response = requests.delete(url, headers=headers, json=payload, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException:
-        return False
-    except Exception:
-        return False
+def _calculate_genre_stats(genres: List[str]) -> Dict:
+    if not genres:
+        return {"topGenres": {}, "uniqueGenresCount": 0}
+    genre_counts = Counter(genres)
+    return {"topGenres": dict(genre_counts.most_common(5)), "uniqueGenresCount": len(genre_counts)}
 
-    return True
+
+def _calculate_freshness_score(tracks: List[Dict]) -> float:
+    release_dates = [
+        d
+        for t in tracks
+        if (d := _parse_release_date(t.get("album", {}).get("release_date"))) is not None
+    ]
+    if not release_dates:
+        return 0.0
+    avg_age_days = sum((datetime.now(timezone.utc) - date).days for date in release_dates) / len(
+        release_dates
+    )
+    return max(0.0, 100.0 - (avg_age_days / 36.525))
+
+
+def _calculate_diversity_score(genres: List[str]) -> float:
+    if not genres:
+        return 0.0
+    p = [count / len(genres) for count in Counter(genres).values()]
+    return -sum(pi * math.log2(pi) for pi in p)
+
+
+def _calculate_hits_vs_gems(tracks: List[Dict]) -> Dict:
+    if not tracks:
+        return {"hitsRatio": 0.0, "gemsRatio": 0.0}
+    hits_count = sum(1 for track in tracks if track.get("popularity", 0) > 70)
+    gems_count = sum(1 for track in tracks if track.get("popularity", 0) < 30)
+    return {"hitsRatio": hits_count / len(tracks), "gemsRatio": gems_count / len(tracks)}
+
+
+def _calculate_taste_similarity(playlist_tracks: List[Dict], user_top_tracks: List[Dict]) -> float:
+    playlist_ids = {track["id"] for track in playlist_tracks if "id" in track}
+    top_track_ids = {track["id"] for track in user_top_tracks if "id" in track}
+    common_tracks = playlist_ids.intersection(top_track_ids)
+    return len(common_tracks) / len(playlist_ids) if playlist_ids else 0.0

@@ -13,4 +13,13 @@ SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 SECRET_KEY = os.getenv("SECRET_KEY", "secret")
 SPOTIFY_TOKEN_URL = os.getenv("SPOTIFY_TOKEN_URL")
 
-DEFAULT_SCOPES = "user-read-private user-read-email user-library-read playlist-read-private user-top-read user-read-playback-position playlist-modify-private playlist-modify-public "
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@db/mydatabase"
+REDIS_URL = "redis://redis:6379"
+
+TIME_RANGES = {
+    "short-term": "short_term",
+    "medium-term": "medium_term",
+    "long-term": "long_term",
+}
+
+DEFAULT_SCOPES = "user-read-private user-read-email user-library-read playlist-read-private user-top-read user-read-recently-played user-read-playback-position playlist-modify-private playlist-modify-public "

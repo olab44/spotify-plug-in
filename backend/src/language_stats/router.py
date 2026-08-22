@@ -1,28 +1,36 @@
-from fastapi import APIRouter, Depends, HTTPException
-from src.language_stats.dal import stream_playlist_tracks
-from src.login.service import get_current_user
+from fastapi import APIRouter, Depends, HTTPException, status
+from redis.client import Redis
+from src.config.dependencies import get_spotify_client
+from src.config.redis_client import get_redis_client
+from src.config.spotify_client import SpotifyClient
 
-from .processor_optimized import get_language_stats
+from . import service
 from .schemas import LanguageStats
 
 router = APIRouter()
 
 
-@router.get("/stats")
-async def get_language_stats_for_playlist(
-    playlist_id: str, user: dict = Depends(get_current_user)
+@router.get("/stats", response_model=LanguageStats, tags=["language"])
+def get_language_stats_for_playlist(
+    playlist_id: str,
+    spotify_client: SpotifyClient = Depends(get_spotify_client),
+    redis_client: Redis = Depends(get_redis_client),
 ) -> LanguageStats:
-    token = user.get("access_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
     if not playlist_id:
-        raise HTTPException(status_code=400, detail="No playlist ID provided")
-    track_stream = stream_playlist_tracks(playlist_id, token)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A playlist_id query parameter is required.",
+        )
 
     try:
-        stats = await get_language_stats(track_stream)
+        stats = service.get_language_stats_for_playlist(
+            playlist_id=playlist_id,
+            spotify_client=spotify_client,
+            redis_client=redis_client,
+        )
         return stats
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to compute language stats: {e}")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while computing language stats.",
+        )

@@ -22,3 +22,5 @@ h11==0.16.0
 anyio==4.4.0
 pyjwt==1.7.1
 fastapi-jwt-auth==0.5.0
+beautifulsoup4==4.12.2
+apscheduler==3.10.1

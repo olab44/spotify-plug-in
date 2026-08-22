@@ -1,43 +1,53 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
-from src.login.service import get_current_user
+from typing import Any, Dict, List
 
-from .service import get_top_artists, get_top_artists_with_song_count
+from fastapi import APIRouter, Depends, HTTPException, Path, status
+from redis.client import Redis
+from src.config.constants import TIME_RANGES
+from src.config.dependencies import get_spotify_client, get_user_id
+from src.config.redis_client import get_redis_client
+from src.config.spotify_client import SpotifyClient
+
+from . import service
+from .schemas import Artist
 
 router = APIRouter()
 
 
-@router.get("/{time_range}")
+@router.get("/{time_range}", response_model=List[Artist])
 def get_top_artists_quick(
-    time_range: str = Path(
-        ..., description="Time range for top artists", regex="^(short|medium|long)-term$"
-    ),
-    user: dict = Depends(get_current_user),
-) -> list:
-    access_token = user.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    time_range: str = Path(..., regex="^(short|medium|long)-term$"),
+    spotify_client: SpotifyClient = Depends(get_spotify_client),
+) -> List[Dict[str, Any]]:
+    spotify_time_range = TIME_RANGES[time_range]
+    artists = service.get_top_artists(spotify_client, time_range=spotify_time_range)
 
-    artists = get_top_artists(access_token, time_range=time_range)
     if artists is None:
-        raise HTTPException(status_code=401, detail="Failed to fetch top artists or token expired")
-
-    for artist in artists:
-        artist["library_song_count"] = None
-
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to fetch top artists from Spotify.",
+        )
     return artists
 
 
-@router.get("/{time_range}/with-counts")
+@router.get("/{time_range}/with-counts", response_model=List[Artist])
 def get_top_artists_full(
     time_range: str = Path(..., regex="^(short|medium|long)-term$"),
-    user: dict = Depends(get_current_user),
-) -> list:
-    access_token = user.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    user_id: str = Depends(get_user_id),
+    spotify_client: SpotifyClient = Depends(get_spotify_client),
+    redis_client: Redis = Depends(get_redis_client),
+) -> List[Dict[str, Any]]:
+    spotify_time_range = TIME_RANGES[time_range]
 
-    artists = get_top_artists_with_song_count(access_token, time_range=time_range)
+    artists = service.get_top_artists_with_song_count(
+        spotify_client=spotify_client,
+        redis_client=redis_client,
+        time_range=spotify_time_range,
+        user_id=user_id,
+    )
+
     if artists is None:
-        raise HTTPException(status_code=401, detail="Failed to fetch top artists or token expired")
-
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to process top artists with song counts.",
+        )
     return artists
